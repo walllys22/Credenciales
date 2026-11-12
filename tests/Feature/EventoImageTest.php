@@ -1,0 +1,80 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\{Evento, Grado};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\AuthenticatedTestCase as TestCase;
+
+class EventoImageTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function data(): array
+    {
+        $grado = Grado::firstOrCreate(['nombre' => 'Kyu']);
+        return ['nombre' => 'Seminario Internacional', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo La Pampita', 'ciudad' => 'Trinidad, Beni', 'tipo_cambio' => '1', 'costos_usd' => [$grado->id => '75.00']];
+    }
+
+    public function test_image_upload_display_preservation_replacement_and_removal(): void
+    {
+        Storage::fake('local');
+        $data = $this->data();
+        $this->post('/eventos', $data + ['imagen' => UploadedFile::fake()->image('afiche.png')])->assertSessionHasNoErrors()->assertRedirect('/eventos');
+        $evento = Evento::firstOrFail(); $original = $evento->imagen;
+        Storage::disk('local')->assertExists($original);
+        $this->get(route('eventos.imagen', $evento))->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('Content-Type', 'image/png');
+        $this->get('/eventos')->assertOk()->assertSee('event-table')->assertSee(route('eventos.imagen', $evento), false);
+        $this->get("/eventos/{$evento->id}/edit")->assertOk()->assertSee('multipart/form-data');
+        $this->put("/eventos/{$evento->id}", $data)->assertSessionHasNoErrors();
+        $this->assertSame($original, $evento->fresh()->imagen);
+        $this->put("/eventos/{$evento->id}", $data + ['imagen' => UploadedFile::fake()->image('nuevo.jpg')])->assertSessionHasNoErrors();
+        Storage::disk('local')->assertMissing($original);
+        $replacement = $evento->fresh()->imagen;
+        Storage::disk('local')->assertExists($replacement);
+        $this->put("/eventos/{$evento->id}", $data + ['quitar_imagen' => '1'])->assertSessionHasNoErrors();
+        $this->assertNull($evento->fresh()->imagen);
+        Storage::disk('local')->assertMissing($replacement);
+        $this->get(route('eventos.imagen', $evento))->assertOk()->assertHeader('Content-Type', 'image/svg+xml');
+    }
+
+    public function test_invalid_or_oversized_uploads_do_not_change_existing_image(): void
+    {
+        Storage::fake('local'); $data = $this->data();
+        $this->post('/eventos', $data + ['imagen' => UploadedFile::fake()->image('original.png')])->assertSessionHasNoErrors();
+        $evento = Evento::firstOrFail(); $original = $evento->imagen;
+        foreach ([UploadedFile::fake()->create('archivo.txt', 1, 'text/plain'), UploadedFile::fake()->image('grande.jpg')->size(5121)] as $file) {
+            $this->put("/eventos/{$evento->id}", $data + ['imagen' => $file])->assertSessionHasErrors('imagen');
+            $this->assertSame($original, $evento->fresh()->imagen);
+        }
+        $this->assertCount(1, Storage::disk('local')->allFiles('eventos'));
+    }
+
+    public function test_event_deletion_removes_image_and_missing_file_has_fallback(): void
+    {
+        Storage::fake('local');
+        $this->post('/eventos', $this->data() + ['imagen' => UploadedFile::fake()->image('afiche.png')])->assertSessionHasNoErrors();
+        $evento = Evento::firstOrFail(); $path = $evento->imagen;
+        Storage::disk('local')->delete($path);
+        $this->get(route('eventos.imagen', $evento))->assertOk();
+        Storage::disk('local')->put($path, 'imagen de prueba');
+        $this->delete("/eventos/{$evento->id}")->assertRedirect('/eventos');
+        Storage::disk('local')->assertMissing($path);
+        $this->assertDatabaseMissing('eventos', ['id' => $evento->id]);
+    }
+
+    public function test_status_filter_pagination_and_dashboard_use_real_records(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 3));
+        $data = $this->data();
+        $this->post('/eventos', $data)->assertSessionHasNoErrors();
+        $data['nombre'] = 'Evento finalizado'; $data['fecha_inicio'] = '2026-01-01'; $data['fecha_final'] = '2026-01-02';
+        $this->post('/eventos', $data)->assertSessionHasNoErrors();
+        $this->get('/eventos?estado=proximo&per_page=25')->assertOk()->assertSee('Seminario Internacional')->assertDontSee('Evento finalizado');
+        $this->get('/eventos?estado=finalizado')->assertOk()->assertSee('Evento finalizado')->assertDontSee('Seminario Internacional');
+        $this->get('/dashboard')->assertOk()->assertSee('Seminario Internacional')->assertDontSee('Evento finalizado')->assertSee('Limpiar caché');
+        $this->travelBack();
+    }
+}

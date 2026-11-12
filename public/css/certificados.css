@@ -1,0 +1,47 @@
+:root {
+    --certificate-recipient-font-size: 22pt;
+}
+@font-face{font-family:'Agnesa Kyoto';src:url('../fonts/agnesa-kyoto.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+.certificate-stage{width:100%;max-width:1000px;margin:0 auto;overflow-x:auto}
+.certificate{position:relative;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
+.certificate-template{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}
+.certificate-recipient{
+    position:absolute;
+    top:47%;
+    /* Desplaza el nombre hacia la derecha para alinearlo con el inicio de la línea del certificado. */
+    left:21%;
+    width:58%;
+    height:6.3%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:left;
+    padding:0 0 .4%;
+    margin:0;
+    text-align:left;
+    font-family:'Agnesa Kyoto',cursive;
+    font-size:var(--certificate-recipient-font-size);
+    font-weight:400;
+    font-synthesis:none;
+    line-height:1.25;color:#111;
+    overflow-wrap:anywhere
+}
+/* Reduce un 20 % la vista del certificado y su texto; conserva el tamaño de impresión. */
+@media screen{
+    .certificate-stage{width:60%;max-width:800px}
+    .certificate{min-width:496px}
+    .certificate-recipient{font-size:calc(var(--certificate-recipient-font-size) * .8)}
+}
+/* Impresión en hoja carta horizontal (279,4 x 215,9 mm), sin márgenes en los cuatro lados. */
+@page{size:letter landscape;margin:0}
+@media print{
+    html,body{margin:0!important;padding:0!important;background:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    .sidebar,.topbar,.page-heading,.content-footer,.alert{display:none!important}
+    .app-shell,.main-shell,body.sidebar-collapsed .main-shell{display:block!important;margin:0!important;min-height:0!important;width:auto!important}
+    #main-content{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
+    /* Ajusta el certificado al ancho de carta, conservando las proporciones de la imagen original. */
+    .certificate-stage{width:279.4mm!important;max-width:279.4mm!important;margin:0!important;overflow:visible!important}
+    .certificate{width:279.4mm!important;min-width:0!important;box-shadow:none;break-inside:avoid;page-break-inside:avoid}
+    /* Mantiene la imagen original; la opción Alta calidad se selecciona en el controlador de la impresora. */
+    .certificate-template{width:100%;height:auto}
+    .certificate-recipient{font-size:var(--certificate-recipient-font-size)}
+}

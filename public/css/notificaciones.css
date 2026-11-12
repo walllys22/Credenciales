@@ -1,0 +1,4 @@
+.app-notifications{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:1090;width:min(640px,calc(100% - 32px));display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.app-notifications .alert{margin:0;padding:16px 20px;text-align:center;box-shadow:0 4px 18px #0002;pointer-events:auto;max-height:60vh;overflow:auto}
+.app-notifications .alert ul{text-align:left}
+@media print{.app-notifications{display:none!important}}
