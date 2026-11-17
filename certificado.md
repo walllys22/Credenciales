@@ -199,18 +199,15 @@ El pie del reporte de inscritos usa texto HTML a **12 pt** en ambas líneas
 (nombre del seminario y BOLIVIA 2026), en pantalla e impresión. La cabecera usa
 public/images/Cabecera.png; el pie se compone con texto HTML y líneas negra
 y roja. Los archivos gráficos originales no se modifican. El pie se
-repite con posición fija al imprimir y conserva la reserva inferior del reporte.
-El pie se ancla abajo: en pantalla, bottom:10mm dentro de la hoja; al imprimir,
-bottom:0 dentro del área útil, pues @page ya aporta los 10 mm de margen inferior.
-El contenido en pantalla reserva 30 mm abajo para evitar que la tabla invada
-el pie; la reserva repetida de impresión permanece en 26 mm.
+repite en cada hoja del PDF. El botón Imprimir utiliza ese mismo PDF en un
+iframe para conservar cabecera y pie completos. La vista previa ancla el pie
+a 10 mm del borde inferior y reserva su espacio al distribuir las filas.
 Las líneas negra/roja del pie tienen el mismo ancho y los
 mismos extremos que la tabla. En pantalla usan los márgenes interiores de
 10 mm del reporte; al imprimir ocupan los 195,9 mm útiles del papel Carta vertical.
 Cabecera.png ocupa una caja de 38 mm de alto, conserva su proporción mediante
 object-fit:contain, alineada arriba con object-position:center top, y se repite
-al imprimir dentro del thead de la tabla, junto al título y las columnas,
-en lugar de depender de una imagen de posición fija. Su caja comienza a
+en cada hoja de vista previa y en el encabezado fijo del PDF. Su caja comienza a
 10 mm del borde superior en pantalla; en impresión se sitúa arriba del área
 útil, con los 10 mm que establece @page.
 La URL usa un hash SHA-256 para
@@ -263,13 +260,71 @@ deduce una cotización de mercado ni se reconvierten datos históricos por supos
 
 ## Registro y listado unificados (17/11/2026)
 
+### 17/11/2026: PDF descargable, 15 participantes por hoja e impresión completa
+
+Se agregó Descargar PDF inmediatamente a la izquierda de Imprimir, con el
+filtro de evento vigente y las mismas restricciones de acceso del reporte.
+La descarga devuelve application/pdf como adjunto. Imprimir solicita el mismo
+documento y abre su impresión mediante un iframe; conserva el PDF cargado
+durante la impresión y libera el anterior al preparar otro.
+
+El PDF se genera con Dompdf 3.1.6 en PHP, sin Chrome en el servidor ni servicios
+externos. Se deshabilitan recursos remotos y ejecución PHP en el documento.
+Filas y totales usan parciales Blade compartidos con la vista. Carta vertical,
+cabecera Cabecera.png, título, pie con sus líneas y «Página X de Y» se incorporan
+en cada página. Las reservas internas de cabecera/pie dejan sus elementos
+exteriores dentro del límite de 10 mm. La organización pasó de 8,5 a **9,5 pt**
+por la última petición; el nombre conserva 10 pt. Las hojas completas muestran
+**15 participantes**, con la última fila próxima al pie. Nombres u organizaciones
+excepcionalmente largos pueden ocupar más alto y provocar una hoja adicional;
+las reservas evitan que invadan la cabecera o el pie.
+
+El resumen de deuda aparece a la izquierda, con un espacio superior de 6 mm.
+Si las filas finales dejan poco espacio, los totales pasan juntos a una hoja
+final. No se alteran saldos, cotizaciones, pagos ni datos personales.
+
+Archivos principales: composer.json/lock, app/Support/ReportePdf.php,
+InscripcionController.php, routes/web.php, inscripciones/imprimir.blade.php,
+pdf.blade.php, reporte-filas.blade.php, reporte-totales.blade.php,
+public/css/inscripciones-imprimir.css, botones.css, public/js/reporte-paginas.js,
+tests/Feature/InscripcionesImprimirTest.php y pruebas JavaScript de paginación.
+
+Verificaciones nuevas: prueba real de descarga PDF en PHPUnit (31 participantes,
+3 páginas y MediaBox Carta), filtros, orden de botones, adjunto/vista inline y
+rechazo al rol impresiones. **17 pruebas JavaScript aprobadas**, incluida la
+partición 15/15/4 sin omitir filas. Se generó además un PDF de QA con 60 filas
+clonadas sólo en memoria: 5 páginas, cuatro de 15 participantes y una de totales.
+PDF.js verificó título y pie en todas; renderizado e inspección visual de las
+hojas y recortes del pie confirmaron tamaños, colores, organización legible,
+numeración y márgenes. Los importes de ese fixture conservan los totales reales
+originales: sirve para disposición, no para validar sumas de las filas clonadas.
+Sintaxis PHP/JavaScript y compilación/limpieza Blade correctas.
+
+Pruebas dirigidas finales, sin otras suites simultáneas: **22 aprobadas / 269
+aserciones** (reporte, inscripción integrada y fotos). Compilación y limpieza
+Blade repetidas correctamente después del último ajuste de presentación.
+Suite PHP completa final, ejecutada de forma aislada: **88 aprobadas y 2
+fallidas / 1062 aserciones**. Sólo fallan las expectativas históricas de logos
+en AuthenticationTest y CredencialMovilTest. Registro de esta ejecución:
+storage/app/pruebas-pdf-final.txt. Una ejecución anterior superpuesta con otra
+suite produjo interferencias en Storage::fake; sus fallos de archivos se
+descartaron y no se atribuyen a esta ejecución final aislada. git diff --check
+sin errores. La reserva inferior de la vista previa quedó en 26 mm para
+mantener la última fila próxima al pie sin alargar artificialmente la hoja.
+
+Limitaciones: no se hizo una impresión física en la impresora del usuario ni
+una prueba interactiva del diálogo de impresión del iframe. Ctrl+P conserva
+la impresión HTML del navegador; el botón Imprimir usa el PDF. La vista puede
+dividir antes una fila alta según su ancho; el PDF utiliza el ancho Carta fijo.
+Los dos fallos históricos de expectativas de logos siguen fuera de este ajuste.
+
 ### 17/11/2026: hojas de vista previa, navegación flotante y cabecera repetida
 
-La cabecera Cabecera.png se trasladó al encabezado thead del reporte, en flujo
-normal, para que el navegador la repita en todas las páginas junto con el título
-y los encabezados. El pie impreso sigue fijo y se mantiene Carta vertical,
-márgenes de 1 cm y la numeración de impresión. Esta solución reemplaza la imagen
-fija anterior, que el usuario indicó que faltaba en la segunda hoja impresa.
+La cabecera Cabecera.png está fuera de la tabla, en cada hoja de vista previa.
+La impresión desde el botón utiliza el PDF generado en el servidor con Dompdf,
+que incorpora cabecera, título, pie y numeración en todas las páginas. Se
+mantienen Carta vertical y los límites exteriores a 1 cm. Esta solución
+sustituye la repetición automática de thead que fallaba en la impresora.
 
 public/js/reporte-paginas.js crea hojas de vista previa midiendo encabezados,
 filas y resumen de totales al cargar fuentes e imagen. Conserva cada fila
@@ -278,8 +333,11 @@ a otra. Recalcula al cambiar el ancho. Los botones flotantes Anterior/Siguiente
 y el indicador Página X de Y aparecen sólo si la vista tiene más de una hoja,
 se deshabilitan en los extremos y permiten desplazarse entre hojas. Respeta
 la preferencia de movimiento reducido y actualiza el indicador al desplazarse.
-La vista previa y los botones se ocultan al imprimir: se imprime una sola
-tabla original con encabezados repetidos, sin duplicar participantes ni totales.
+Cada hoja completa admite hasta 15 participantes y distribuye sus filas hacia
+el pie, según la última indicación del usuario; sustituye las cantidades
+intermedias de 13 y 16. Las filas excepcionalmente altas pueden reducir esa
+cantidad en la vista previa para mantener íntegro el contenido.
+El botón de impresión prepara el PDF, sin imprimir los botones flotantes.
 Si no carga JavaScript, el listado original permanece disponible.
 
 Archivos: resources/views/inscripciones/imprimir.blade.php,
@@ -318,7 +376,7 @@ equivalente USD indica Sin tipo de cambio. El resumen se conserva junto al
 resto de totales en la última hoja de la vista previa.
 
 La columna Número pasa de 5 % a 6 % de ancho, con texto 9,5 pt y sin salto en
-N.º. El nombre del participante usa 10 pt y la organización 7 pt en la línea
+N.º. El nombre del participante usa 10 pt y la organización 9,5 pt en la línea
 inferior. Se mantiene la distribución de siete columnas, colores y monedas.
 Archivos: InscripcionController.php, inscripciones/imprimir.blade.php,
 public/css/inscripciones-imprimir.css y tests/Feature/InscripcionesImprimirTest.php.

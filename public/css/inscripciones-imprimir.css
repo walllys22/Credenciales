@@ -46,7 +46,7 @@
 .registrations-report .report-debt-summary th{width:60%}
 .registrations-report .panel-toolbar{background:transparent}
 .report-preview-page+.report-preview-page{margin-top:16px}
-.report-preview-page{padding-bottom:36mm;scroll-margin-top:12px}
+.report-preview-page{padding-bottom:26mm;scroll-margin-top:12px}
 .report-page-navigation{position:fixed;right:20px;bottom:20px;z-index:1030;padding:8px;gap:10px;align-items:center;background:#fff;border:1px solid #dce4ef;border-radius:8px;box-shadow:0 3px 14px #0002;font:400 13px/1.3 Arial,sans-serif}
 .report-page-navigation:not([hidden]){display:flex}
 .report-source-with-preview{display:none!important}
