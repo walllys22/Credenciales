@@ -46,7 +46,11 @@
             const response = await fetch(button.dataset.pdfUrl);
             if (!response.ok || !response.headers.get('Content-Type')?.includes('application/pdf')) throw new Error('PDF');
             const url = URL.createObjectURL(await response.blob());
-            document.getElementById('report-print-frame')?.remove();
+            const previousFrame = document.getElementById('report-print-frame');
+            if (previousFrame) {
+                URL.revokeObjectURL(previousFrame.src);
+                previousFrame.remove();
+            }
             const frame = document.createElement('iframe');
             frame.id = 'report-print-frame';
             frame.title = 'Impresión del reporte';
@@ -54,7 +58,6 @@
             frame.onload = () => {
                 frame.contentWindow.focus();
                 frame.contentWindow.print();
-                URL.revokeObjectURL(url);
             };
             frame.src = url;
             document.body.append(frame);

@@ -11,6 +11,22 @@ class InscripcionesImprimirTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_pdf_generator_produces_letter_pages_with_fifteen_participants_and_final_totals(): void
+    {
+        $grado = Grado::create(['nombre' => '1er Dan']);
+        $evento = Evento::create(['nombre' => 'PDF real', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
+        for ($i = 1; $i <= 31; $i++) {
+            $persona = Persona::create(['primer_nombre' => 'José '.$i, 'primer_apellido' => 'Prueba', 'sexo' => 'Masculino', 'grado_id' => $grado->id, 'organizacion' => 'Shorin Ryu Shorinkan Bolivia']);
+            Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante']);
+        }
+        $response = $this->get(route('inscripciones.pdf', ['evento_id' => $evento->id]))->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+        $pdf = $response->getContent();
+        $this->assertStringStartsWith('%PDF-', $pdf);
+        $this->assertSame(3, preg_match_all('~/Type\s*/Page\b~', $pdf));
+        $this->assertMatchesRegularExpression('~/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+612(?:\.0+)?\s+792(?:\.0+)?\s*\]~', $pdf);
+    }
+
     public function test_pdf_download_preserves_filter_and_uses_attachment_before_print_button(): void
     {
         $event = Evento::create(['nombre' => 'PDF', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
