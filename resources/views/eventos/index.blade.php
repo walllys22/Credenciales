@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="{{ asset('css/eventos-modal.css') }}?v={{ filemtime(public_path('css/eventos-modal.css')) }}">
 @endpush
 @section('actions')
-    <a href="{{ route('eventos.create') }}" class="btn btn-create">＋ Crear</a>
-    <a href="{{ route('dashboard') }}" class="btn btn-close-page">@include('partials.icon', ['name' => 'close']) Cerrar</a>
+    <a href="{{ route('eventos.create') }}" class="btn btn-create btn-project" data-action-style="create" aria-label="Crear" title="Crear"><i class="fa-solid fa-plus" aria-hidden="true"></i><span class="button-label">Crear</span></a>
+    <a href="{{ route('dashboard') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 @endsection
 @section('content')
 <section class="panel">
@@ -14,7 +14,7 @@
         <div><label for="per_page" class="form-label">Registros</label><select id="per_page" name="per_page" class="form-select">@foreach([10, 25, 50, 100] as $size)<option value="{{ $size }}" @selected($perPage === $size)>{{ $size }}</option>@endforeach</select></div>
         <div><label for="estado" class="form-label">Estado</label><select id="estado" name="estado" class="form-select"><option value="">Todos</option><option value="proximo" @selected($estado === 'proximo')>Próximos</option><option value="en_curso" @selected($estado === 'en_curso')>En curso</option><option value="finalizado" @selected($estado === 'finalizado')>Finalizados</option></select></div>
         <div class="filter-search"><label for="q" class="form-label">Buscar</label><input id="q" name="q" value="{{ $q }}" class="form-control" placeholder="Evento, ciudad o lugar…"></div>
-        <div class="filter-submit"><button class="btn btn-primary">Buscar</button>@if($q !== '' || $estado !== '' || $perPage !== 10)<a class="btn btn-outline-secondary" href="{{ route('eventos.index') }}">Limpiar</a>@endif</div>
+        <div class="filter-submit"><button class="btn btn-primary btn-project" data-action-style="search" aria-label="Buscar" title="Buscar"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="button-label">Buscar</span></button>@if($q !== '' || $estado !== '' || $perPage !== 10)<a class="btn btn-outline-secondary btn-project" href="{{ route('eventos.index') }}" data-action-style="reset" aria-label="Limpiar" title="Limpiar"><i class="fa-solid fa-broom" aria-hidden="true"></i><span class="button-label">Limpiar</span></a>@endif</div>
     </form>
     <div class="table-responsive">
         <table class="table align-middle event-table">
@@ -34,10 +34,10 @@
                     </td>
                     <td>
                         <div class="table-actions">
-                            <button type="button" class="btn action-button action-view" data-bs-toggle="modal" data-bs-target="#evento-{{ $evento->id }}" title="Ver evento" aria-label="Ver evento {{ $evento->nombre }}">@include('partials.icon', ['name' => 'view'])</button>
-                            <a class="btn action-button action-edit" href="{{ route('eventos.edit', $evento) }}" title="Editar evento" aria-label="Editar evento {{ $evento->nombre }}">@include('partials.icon', ['name' => 'edit'])</a>
-                            <form action="{{ route('eventos.destroy', $evento) }}" method="POST" data-confirm="¿Eliminar el evento {{ $evento->nombre }}? Esta acción no se puede deshacer.">@csrf @method('DELETE')<button class="btn action-button action-delete" title="Eliminar evento" aria-label="Eliminar evento {{ $evento->nombre }}">@include('partials.icon', ['name' => 'delete'])</button></form>
-                            <a class="btn action-button action-inscriptions" href="{{ route('inscripciones.index', ['evento_id' => $evento->id]) }}" title="Ver inscripciones" aria-label="Ver inscripciones de {{ $evento->nombre }}">@include('partials.icon', ['name' => 'inscripciones'])</a>
+                            <button type="button" class="btn action-button action-view btn-project" data-bs-toggle="modal" data-bs-target="#evento-{{ $evento->id }}" title="Ver evento" aria-label="Ver evento {{ $evento->nombre }}" data-action-style="view"><i class="fa-solid fa-eye" aria-hidden="true"></i><span class="button-label">Ver evento</span></button>
+                            <a class="btn action-button action-edit btn-project" href="{{ route('eventos.edit', $evento) }}" title="Editar evento" aria-label="Editar evento {{ $evento->nombre }}" data-action-style="edit"><i class="fa-solid fa-pen" aria-hidden="true"></i><span class="button-label">Editar evento</span></a>
+                            <form action="{{ route('eventos.destroy', $evento) }}" method="POST" data-confirm="¿Eliminar el evento {{ $evento->nombre }}? Esta acción no se puede deshacer.">@csrf @method('DELETE')<button class="btn action-button action-delete btn-project" title="Eliminar evento" aria-label="Eliminar evento {{ $evento->nombre }}" data-action-style="delete"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span class="button-label">Eliminar evento</span></button></form>
+                            <a class="btn action-button action-inscriptions btn-project" href="{{ route('inscripciones.index', ['evento_id' => $evento->id]) }}" title="Ver inscripciones" aria-label="Ver inscripciones de {{ $evento->nombre }}" data-action-style="registrations"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i><span class="button-label">Ver inscripciones</span></a>
                         </div>
                     </td>
                 </tr>
@@ -50,8 +50,9 @@
     <div class="panel-pagination"><p class="mb-0">{{ $eventos->total() }} evento(s) registrados.</p>@if($eventos->hasPages())<div class="mt-3">{{ $eventos->links() }}</div>@endif</div>
 </section>
 @foreach($eventos as $evento)
-    <div class="modal fade event-info-modal" id="evento-{{ $evento->id }}" tabindex="-1" aria-labelledby="evento-title-{{ $evento->id }}" aria-hidden="true">
+    <div class="modal fade event-info-modal" data-action-style="view" id="evento-{{ $evento->id }}" tabindex="-1" aria-labelledby="evento-title-{{ $evento->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title">Datos del evento</h2></div>
             <div class="modal-body">
                 <div class="event-compact-header">
                     <img class="event-detail-image" src="{{ $evento->imagen_url }}" alt="Imagen de {{ $evento->nombre }}" loading="lazy">
@@ -84,7 +85,7 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button><a href="{{ route('eventos.edit', $evento) }}" class="btn btn-primary">Editar evento</a></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary btn-project" data-bs-dismiss="modal" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></button><a href="{{ route('eventos.edit', $evento) }}" class="btn btn-primary btn-project" data-action-style="edit" aria-label="Editar evento" title="Editar evento"><i class="fa-solid fa-pen" aria-hidden="true"></i><span class="button-label">Editar evento</span></a></div>
         </div></div>
     </div>
 @endforeach

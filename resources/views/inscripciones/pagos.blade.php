@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{{ asset('css/pagos.css') }}?v={{ filemtime(public_path('css/pagos.css')) }}">
 @endpush
 @section('actions')
-    <a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary">← Volver a inscripciones</a>
+    <a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="back" aria-label="Volver a inscripciones" title="Volver a inscripciones"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="button-label">Volver a inscripciones</span></a>
 @endsection
 
 @section('content')
@@ -67,8 +67,8 @@
     </div>
     </div>
     <div class="form-actions">
-        <a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar pago</button>
+        <a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></a>
+        <button type="submit" class="btn btn-primary btn-project" data-action-style="save" aria-label="Guardar pago" title="Guardar pago"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">Guardar pago</span></button>
     </div>
 </form>
 @endif
@@ -94,7 +94,7 @@
                         <td>{{ $pago->observacion ?? '—' }}@if($pago->pago_total)<small class="d-block">Pago total por descuento de preinscripción: Bs {{ number_format($pago->descuento, 2, ',', '.') }}</small>@endif</td>
                         <td class="text-end">
                             @if($pago->id === $pagoEliminableId)
-                            <button type="button" class="btn action-button action-delete" data-bs-toggle="modal" data-bs-target="#eliminar-pago-{{ $pago->id }}" title="Eliminar pago" aria-label="Eliminar pago del {{ $pago->fecha->format('d/m/Y') }} de {{ $inscripcion->persona->nombre_completo }}"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
+                            <button type="button" class="btn action-button action-delete btn-project" data-bs-toggle="modal" data-bs-target="#eliminar-pago-{{ $pago->id }}" title="Eliminar pago" aria-label="Eliminar pago del {{ $pago->fecha->format('d/m/Y') }} de {{ $inscripcion->persona->nombre_completo }}" data-action-style="delete"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span class="button-label">Eliminar pago</span></button>
                             @endif
                         </td>
                     </tr>
@@ -108,12 +108,12 @@
 </section>
 @foreach($pagos as $pago)
     @if($pago->id === $pagoEliminableId)
-    <div class="modal fade payment-delete-modal" id="eliminar-pago-{{ $pago->id }}" tabindex="-1" aria-labelledby="eliminar-pago-title-{{ $pago->id }}" aria-describedby="eliminar-pago-description-{{ $pago->id }}" aria-hidden="true">
+    <div class="modal fade payment-delete-modal" data-action-style="delete" id="eliminar-pago-{{ $pago->id }}" tabindex="-1" aria-labelledby="eliminar-pago-title-{{ $pago->id }}" aria-describedby="eliminar-pago-description-{{ $pago->id }}" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title" id="eliminar-pago-title-{{ $pago->id }}"><i class="fa-solid fa-trash-can me-2" aria-hidden="true"></i>Eliminar pago</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-project" data-bs-dismiss="modal" aria-label="Cerrar" data-action-style="close" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></button>
                 </div>
                 <div class="modal-body">
                     <p id="eliminar-pago-description-{{ $pago->id }}">¿Confirmas que deseas eliminar este pago? Esta acción no se puede deshacer.</p>
@@ -136,10 +136,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary btn-project" data-bs-dismiss="modal" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></button>
                     <form id="eliminar-pago-form-{{ $pago->id }}" method="POST" action="{{ route('inscripciones.pagos.destroy', [$inscripcion, $pago]) }}">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-danger" data-payment-delete-submit disabled><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Sí, eliminar pago</button>
+                        <button type="submit" class="btn btn-danger btn-project" data-payment-delete-submit disabled data-action-style="delete" aria-label="Sí, eliminar pago" title="Sí, eliminar pago"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span class="button-label">Sí, eliminar pago</span></button>
                     </form>
                 </div>
             </div>

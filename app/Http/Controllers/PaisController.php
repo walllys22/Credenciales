@@ -48,6 +48,9 @@ class PaisController extends Controller
 
     public function destroy(Pais $pais)
     {
+        if ($pais->personas()->exists()) {
+            return to_route('paises.index')->with('error', 'No se puede eliminar un país asignado a participantes.');
+        }
         $pais->delete();
         return to_route('paises.index')->with('success', 'País eliminado.');
     }

@@ -19,9 +19,9 @@ class InscripcionesImprimirTest extends TestCase
             $persona = Persona::create(['primer_nombre' => 'Participante '.str_pad($i, 2, '0', STR_PAD_LEFT), 'primer_apellido' => 'Prueba', 'documento_identidad' => '9000'.$i, 'sexo' => 'Masculino', 'fecha_nacimiento' => '1990-01-01', 'telefono' => '70012345', 'grado_id' => $grado->id]);
             Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante']);
         }
-        $this->get(route('inscripciones.index'))->assertOk()
+        $this->get(route('inscripciones.index', ['evento_id' => $evento->id]))->assertOk()
             ->assertSeeInOrder([route('inscripciones.imprimir'), route('inscripciones.create')], false)
-            ->assertSee('images/Impresora.png', false);
+            ->assertSee('data-action-style="print"', false);
         $response = $this->get(route('inscripciones.imprimir', ['q' => 'inexistente', 'evento_id' => $evento->id]))->assertOk();
         $response->assertViewHas('inscripciones', fn ($rows) => $rows->count() === 14)
             ->assertSeeInOrder(['Participante 01 Prueba', 'Participante 14 Prueba'])

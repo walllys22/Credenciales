@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{Inscripcion, Evento, Persona, Pago, Grado};
+use App\Models\{Inscripcion, Evento, Persona, Pago, Grado, Pais};
 use App\Support\DatosPersona;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,8 +14,8 @@ class InscripcionController extends Controller
 {
     public function index(Request $request)
     {
-        $q = trim((string) $request->query('q', '')); $eventoId = $request->query('evento_id');
-        $inscripciones = Inscripcion::with(['evento.grados', 'persona.grado'])->withSum('pagos', 'monto')->withSum('pagos', 'descuento')->when($eventoId, fn ($query) => $query->where('evento_id', $eventoId))
+        $q = trim((string) $request->query('q', '')); $eventoId = $request->integer('evento_id');
+        $inscripciones = Inscripcion::with(['evento.grados', 'persona.grado', 'persona.pais'])->withSum('pagos', 'monto')->withSum('pagos', 'descuento')->where('evento_id', $eventoId)
             ->when($q !== '', fn ($query) => $query->whereHas('persona', fn ($query) => $query->where(function ($query) use ($q) {
                 foreach (['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad'] as $field) $query->orWhere($field, 'like', "%{$q}%");
             })))
@@ -70,7 +70,7 @@ class InscripcionController extends Controller
             'grado_id' => $persona->grado_id,
             'nombre' => $persona->nombre_completo.' · CI '.$persona->documento_identidad.' · '.$persona->grado->nombre,
             'eventos_inscritos' => $persona->inscripciones->where('id', '!=', $inscripcion->id)->pluck('evento_id')->values(),
-            'datos' => array_merge($persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id']), ['fecha_nacimiento' => $persona->fecha_nacimiento?->format('Y-m-d')]),
+            'datos' => array_merge($persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id']), ['fecha_nacimiento' => $persona->fecha_nacimiento?->format('Y-m-d')]),
             'foto_url' => $persona->foto_url,
         ]);
         $personas = $todasPersonas->filter(fn ($persona) => $eventoSeleccionado && !$persona->inscripciones
@@ -80,6 +80,7 @@ class InscripcionController extends Controller
             'inscripcion' => $inscripcion,
             'persona' => $personaFormulario, 'personaSeleccionada' => $personaSeleccionada,
             'grados' => Grado::orderBy('nombre')->get(),
+            'paises' => Pais::orderBy('nombre')->get(),
             'eventos' => Evento::with('grados')->orderBy('nombre')->get(),
             'personas' => $personas, 'opcionesPersonas' => $opcionesPersonas,
             'eventoSeleccionado' => $eventoSeleccionado, 'hayPersonas' => $todasPersonas->isNotEmpty(),

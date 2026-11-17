@@ -3,8 +3,8 @@
 @section('section', 'Inscripción / Imprimir')
 @section('title', 'Personas inscritas')
 @section('actions')
-    <button type="button" class="btn btn-create" id="print-registrations"><img src="{{ asset('images/Impresora.png') }}" width="22" height="22" alt=""> Imprimir</button>
-    <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page">Cerrar</a>
+    <button type="button" class="btn btn-create btn-project" id="print-registrations" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
+    <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 @endsection
 @section('content')
 <section class="panel registrations-report">

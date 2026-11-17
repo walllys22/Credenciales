@@ -14,7 +14,10 @@
 /* Labels are printed in the front artwork; retain accessible text. */
 .credential-front .credential-card-content{inset:0}
 .credential-front .credential-photo{position:absolute;left:7.5%;top:50.8%;width:37.8%;height:30.5%;border-radius:1mm}
-.credential-front .credential-data{position:absolute;inset:0;font-size:10px;line-height:1.15}
+.credential-front .credential-data{position:absolute;inset:0;font-size:calc(10px + 2pt);line-height:1.15}
+.credential-front .credential-country{position:absolute;left:7.5%;top:82.5%;width:37.8%;display:flex;align-items:center;justify-content:center;gap:1.3mm;font-size:11.7px;line-height:1.2;text-align:center}
+.credential-country>img{display:block;width:6.5mm;height:4.29mm;object-fit:contain;flex-shrink:0}
+.credential-country>span{min-width:0;overflow-wrap:anywhere}
 .credential-front .credential-data>div{position:absolute;left:51%;right:7%;height:7.8%;display:flex;align-items:center}
 .credential-front .credential-data>div:nth-child(1){top:52.8%}
 .credential-front .credential-data>div:nth-child(2){top:63%}

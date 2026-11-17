@@ -9,13 +9,15 @@
     <link rel="icon" href="{{ asset('images/icono.png') }}?v={{ hash_file('sha256', public_path('images/icono.png')) }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('css/credenciales.css') }}?v={{ filemtime(public_path('css/credenciales.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/credencial-movil.css') }}?v={{ filemtime(public_path('css/credencial-movil.css')) }}">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/botones.css') }}?v={{ filemtime(public_path('css/botones.css')) }}">
 </head>
 <body>
     <main class="mobile-ficha" aria-label="Ficha de {{ $persona->nombre_completo }}">
         @include('personas.ficha')
         {{-- Botón centrado debajo de la ficha, disponible solo en la vista móvil de verificación. --}}
         <div class="mobile-ficha-actions">
-            <button type="button" class="mobile-ficha-close" id="close-mobile-ficha">Cerrar</button>
+            <button type="button" class="mobile-ficha-close btn-project" id="close-mobile-ficha" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></button>
         </div>
     </main>
     <script>

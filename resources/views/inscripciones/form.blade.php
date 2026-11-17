@@ -2,7 +2,7 @@
 @section('section', 'Inscripción')
 @section('title', $inscripcion->exists ? 'Editar inscripción' : 'Nueva inscripción')
 @section('subtitle', 'Registra los datos personales, la foto y la inscripción en un solo paso.')
-@section('actions')<a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary">← Volver a inscripciones</a>@endsection
+@section('actions')<a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="back" aria-label="Volver a inscripciones" title="Volver a inscripciones"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="button-label">Volver a inscripciones</span></a>@endsection
 @section('content')
 <form enctype="multipart/form-data" method="POST" action="{{ $inscripcion->exists ? route('inscripciones.update', $inscripcion) : route('inscripciones.store') }}" class="panel form-panel">
 @csrf @if($inscripcion->exists) @method('PUT') @endif
@@ -11,18 +11,21 @@
 <input type="hidden" id="persona_id" name="persona_id" value="{{ $inscripcion->persona_id }}">
 <p class="form-text">Los datos personales y la foto son compartidos por las inscripciones de este participante.</p>
 @else
-<div class="mb-4">
-<label for="persona_id" class="form-label">Cargar participante existente (opcional)</label>
-<select id="persona_id" name="persona_id" class="form-select @error('persona_id') is-invalid @enderror">
-<option value="">Nuevo participante</option>
-@foreach($opcionesPersonas as $opcion)<option value="{{ $opcion['id'] }}" @selected($personaSeleccionada == $opcion['id'])>{{ $opcion['nombre'] }}</option>@endforeach
-</select>
-<p class="form-text">Para alguien ya registrado, selecciónalo aquí para conservar su foto y evitar duplicarlo.</p>
-</div>
+<input type="hidden" id="persona_id" name="persona_id" value="{{ $persona->exists ? $persona->id : '' }}">
 @endif
 @error('persona_id')<div class="text-danger mb-3">{{ $message }}</div>@enderror
 @include('personas.datos')
-<div class="form-section-heading mt-4"><span class="step-number">03</span><div><h2>Datos de la inscripción</h2><p>Elige el evento y el cargo del participante.</p></div></div>
+<div class="row align-items-center mt-4 mb-4">
+    <div class="col-md-6"><div class="form-section-heading mb-0"><span class="step-number">03</span><div><h2>Datos de la inscripción</h2><p>Elige el evento y el cargo del participante.</p></div></div></div>
+    <div class="col-md-6">
+        <label for="pais_id" class="form-label">País del participante</label>
+        <select id="pais_id" name="pais_id" class="form-select @error('pais_id') is-invalid @enderror">
+            <option value="">Seleccionar país</option>
+            @foreach($paises as $pais)<option value="{{ $pais->id }}" @selected(old('pais_id', $persona->pais_id) == $pais->id)>{{ $pais->nombre }}</option>@endforeach
+        </select>
+        @error('pais_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+</div>
 <div class="mb-4"><label for="evento_id" class="form-label">Evento <span class="required">*</span></label><select class="form-select @error('evento_id') is-invalid @enderror" name="evento_id" id="evento_id" required><option value="">Seleccionar evento</option>@foreach($eventos as $evento)<option value="{{ $evento->id }}" @selected($eventoSeleccionado == $evento->id)>{{ $evento->nombre }} · {{ $evento->fecha_inicio->format('d/m/Y') }} · {{ $evento->ciudad }}</option>@endforeach</select>@error('evento_id')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
 <x-field name="cargo" label="Cargo" :value="$inscripcion->cargo" :required="true" maxlength="120"/>
 <p class="form-text">Por ejemplo: participante, expositor, coordinador u organizador.</p>
@@ -53,7 +56,7 @@
 </div>
 <div class="tariff-preview" role="status" aria-live="polite"><div><span class="eyebrow">TARIFA VIGENTE</span><p id="tariff-message">Selecciona un evento y una persona para consultar el costo.</p></div><strong id="tariff-amount">—</strong></div>
 @if($eventos->isEmpty())<div class="alert alert-warning mt-3">Necesitas <a href="{{ route('eventos.create') }}">crear un evento</a> antes de inscribir participantes.</div>@endif
-<div class="form-actions"><a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary">Cancelar</a><button id="guardar-inscripcion" class="btn btn-primary" @disabled($eventos->isEmpty() || $grados->isEmpty())>{{ $inscripcion->exists ? 'Guardar cambios' : 'Registrar inscripción' }}</button></div>
+<div class="form-actions"><a href="{{ route('inscripciones.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></a><button id="guardar-inscripcion" class="btn btn-primary btn-project" @disabled($eventos->isEmpty() || $grados->isEmpty()) data-action-style="save" aria-label="{{ $inscripcion->exists ? 'Guardar cambios' : 'Registrar inscripción' }}" title="{{ $inscripcion->exists ? 'Guardar cambios' : 'Registrar inscripción' }}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">{{ $inscripcion->exists ? 'Guardar cambios' : 'Registrar inscripción' }}</span></button></div>
 </form>
 @endsection
 @push('scripts')
@@ -72,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grado = document.getElementById('grado_id');
     const foto = document.getElementById('foto');
     const preview = document.getElementById('foto-preview');
-    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono', 'grado_id'];
+    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono', 'grado_id', 'pais_id'];
     function cargarPersona() {
         const opcion = opcionesPersonas.find(opcion => String(opcion.id) === persona.value);
         datos.forEach(campo => { document.getElementById(campo).value = opcion?.datos[campo] ?? ''; });

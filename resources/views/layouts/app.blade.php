@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/notificaciones.css') }}?v={{ filemtime(public_path('css/notificaciones.css')) }}">
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/grados.css') }}?v={{ filemtime(public_path('css/grados.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/botones.css') }}?v={{ filemtime(public_path('css/botones.css')) }}">
 </head>
 <body>
 <div id="app-notifications" class="app-notifications" aria-live="polite" aria-atomic="false">
@@ -47,7 +49,7 @@
     </aside>
     <div class="main-shell">
         <header class="topbar">
-            <button type="button" class="btn btn-light d-lg-none" id="menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menú">☰</button>
+            <button type="button" class="btn btn-light d-lg-none btn-project" id="menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menú" data-action-style="menu" title="☰"><i class="fa-solid fa-bars" aria-hidden="true"></i><span class="button-label">☰</span></button>
             <span class="breadcrumb-label">Administración <span>/</span> <strong>@yield('section', 'Persona')</strong></span>
             <div class="topbar-right">
                 <span class="today">{{ now()->translatedFormat('d M Y') }}</span>
@@ -82,6 +84,7 @@
     </div>
 </div>
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('js/modal-colores.js') }}?v={{ filemtime(public_path('js/modal-colores.js')) }}" defer></script>
 <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
 @stack('scripts')
 </body>

@@ -35,7 +35,10 @@ class InscripcionIntegradaTest extends TestCase
         Storage::disk('local')->assertExists($persona->foto);
         $this->assertSame($persona->id, Inscripcion::firstOrFail()->persona_id);
         $this->assertSame('200.00', Inscripcion::firstOrFail()->tarifa());
-        $this->get('/inscripciones')->assertOk()->assertSee($persona->foto_url, false)->assertSee('70012345')->assertSee('CI-123')->assertSee('Ana María Pérez López');
+        $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()->assertSee($persona->foto_url, false)->assertSee('70012345')->assertSee('CI-123')->assertSee('Ana María Pérez López')
+            ->assertSee('data-bs-target="#ver-participante-'.Inscripcion::firstOrFail()->id.'"', false)
+            ->assertSee('Datos del participante')->assertSee('20/05/1995')->assertSee('Segundo nombre')
+            ->assertSee('Datos de la inscripción')->assertSee('Descuento');
     }
 
     public function test_failed_registration_rolls_back_new_person_and_photo(): void
@@ -114,5 +117,44 @@ class InscripcionIntegradaTest extends TestCase
         $data['persona_id'] = Persona::firstOrFail()->id;
         $data['grado_id'] = Grado::create(['nombre' => 'Kyu'])->id;
         $this->put(route('inscripciones.update', Inscripcion::firstOrFail()), $data)->assertSessionHasErrors('grado_id');
+    }
+
+    public function test_participant_country_is_saved_loaded_and_validated(): void
+    {
+        $data = $this->datos();
+        $bolivia = \App\Models\Pais::where('nombre', 'Bolivia')->firstOrFail();
+        $data['pais_id'] = $bolivia->id;
+        $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
+        $inscripcion = Inscripcion::firstOrFail();
+        $this->assertSame($bolivia->id, $inscripcion->persona->pais_id);
+        $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()->assertSeeInOrder(['>Participante</small>', '>Bolivia</small>'], false);
+        $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('País del participante')
+            ->assertSee('value="'.$bolivia->id.'" selected', false);
+        $data['persona_id'] = $inscripcion->persona_id;
+        $data['pais_id'] = 99999;
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasErrors('pais_id');
+        $this->assertSame($bolivia->id, $inscripcion->persona->fresh()->pais_id);
+        $this->delete(route('paises.destroy', $bolivia))->assertSessionHas('error');
+        $data['pais_id'] = \App\Models\Pais::where('nombre', 'Chile')->value('id');
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertSame($data['pais_id'], $inscripcion->persona->fresh()->pais_id);
+    }
+
+    public function test_country_migration_assigns_bolivia_without_changing_existing_data(): void
+    {
+        $data = $this->datos();
+        $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
+        $inscripcion = Inscripcion::firstOrFail();
+        $original = $inscripcion->persona->getAttributes();
+        unset($original['pais_id']);
+        $migration = require database_path('migrations/2026_11_17_000002_add_pais_to_personas.php');
+        $migration->asignarBolivia();
+        $persona = $inscripcion->persona->fresh();
+        $this->assertSame('Bolivia', $persona->pais->nombre);
+        $actual = $persona->getAttributes();
+        unset($actual['pais_id']);
+        $this->assertEquals($original, $actual);
+        $this->assertDatabaseCount('inscripciones', 1);
+        Storage::disk('local')->assertExists($persona->foto);
     }
 }

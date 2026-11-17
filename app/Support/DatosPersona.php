@@ -18,6 +18,7 @@ class DatosPersona
             'sexo' => ['required', Rule::in(['Masculino', 'Femenino', 'Otro'])],
             'fecha_nacimiento' => 'nullable|date|before_or_equal:today', 'telefono' => 'nullable|string|max:30',
             'grado_id' => 'required|exists:grados,id',
+            'pais_id' => 'sometimes|nullable|exists:paises,id',
             'foto' => [$persona ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
         ]);
         if ($persona && $persona->grado_id != $data['grado_id'] && $persona->inscripciones()->exists()) {

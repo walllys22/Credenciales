@@ -45,7 +45,7 @@ class EventManagementTest extends TestCase
         foreach (["/personas/{$persona->id}/edit", "/eventos/{$evento->id}/edit", "/inscripciones/{$inscripcion->id}/edit", '/inscripciones/create'] as $url) $this->get($url)->assertOk();
         $this->get('/personas')->assertSee('Ana María Pérez López');
         $this->get('/eventos')->assertSee('Encuentro anual')->assertSee('120,50');
-        $this->get('/inscripciones')->assertSee('Expositora')->assertSee('120,50');
+        $this->get('/inscripciones?evento_id='.$evento->id)->assertSee('Expositora')->assertSee('120,50');
     }
     public function test_duplicates_are_rejected_and_existing_person_can_be_edited(): void
     {
@@ -137,6 +137,23 @@ class EventManagementTest extends TestCase
         $this->get('/inscripciones?evento_id=999')->assertDontSee('Expositora');
     }
 
+    public function test_registration_list_requires_an_event_before_showing_participants(): void
+    {
+        [$grado, $persona, $evento] = $this->fixtures();
+        Inscripcion::create(['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Participante']);
+        $otro = $evento->replicate();
+        $otro->nombre = 'Otro evento';
+        $otro->save();
+        Inscripcion::create(['evento_id' => $otro->id, 'persona_id' => $persona->id, 'cargo' => 'Organizador']);
+        foreach (['/inscripciones', '/inscripciones?q=Ana', '/inscripciones?evento_id=99999'] as $url) {
+            $this->get($url)->assertOk()->assertSee('Seleccione un evento')
+                ->assertDontSee($persona->nombre_completo)->assertDontSee('<th>Participante</th>', false)
+                ->assertViewHas('inscripciones', fn ($rows) => $rows->isEmpty());
+        }
+        $this->get('/inscripciones?evento_id='.$evento->id)->assertOk()->assertSee($persona->nombre_completo)
+            ->assertViewHas('inscripciones', fn ($rows) => $rows->count() === 1 && $rows->first()->evento_id === $evento->id);
+    }
+
     public function test_registrations_are_alphabetical_before_pagination_and_with_filters(): void
     {
         [$grado, $persona, $evento] = $this->fixtures();
@@ -147,12 +164,12 @@ class EventManagementTest extends TestCase
             $participante = Persona::create($data);
             Inscripcion::create(['evento_id' => $evento->id, 'persona_id' => $participante->id, 'cargo' => 'Participante']);
         }
-        foreach (['/inscripciones', '/inscripciones?evento_id='.$evento->id.'&q=Participante'] as $url) {
+        foreach (['/inscripciones?evento_id='.$evento->id, '/inscripciones?evento_id='.$evento->id.'&q=Participante'] as $url) {
             $this->get($url)->assertOk()->assertViewHas('inscripciones', fn ($rows) =>
                 $rows->count() === 12 && $rows->first()->persona->primer_nombre === 'Participante 01'
                 && $rows->last()->persona->primer_nombre === 'Participante 12');
         }
-        $this->get('/inscripciones?page=2')->assertOk()->assertViewHas('inscripciones', fn ($rows) =>
+        $this->get('/inscripciones?page=2&evento_id='.$evento->id)->assertOk()->assertViewHas('inscripciones', fn ($rows) =>
             $rows->count() === 2 && $rows->first()->persona->primer_nombre === 'Participante 13'
             && $rows->last()->persona->primer_nombre === 'Participante 14');
     }
@@ -167,7 +184,7 @@ class EventManagementTest extends TestCase
         $inscripcion = Inscripcion::firstOrFail();
         $this->assertTrue($inscripcion->jefe_dojo);
         $this->assertSame('1181.00', $inscripcion->tarifa());
-        foreach (['/inscripciones', '/inscripciones/imprimir', route('inscripciones.pagos.create', $inscripcion)] as $url) {
+        foreach (['/inscripciones?evento_id='.$evento->id, '/inscripciones/imprimir', route('inscripciones.pagos.create', $inscripcion)] as $url) {
             $this->get($url)->assertOk()->assertSee('Bs 1.181,00');
         }
         $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('value="1" selected', false);
@@ -193,7 +210,7 @@ class EventManagementTest extends TestCase
         $this->assertTrue($inscripcion->invitado_sin_costo);
         $this->assertSame('0.00', $inscripcion->tarifa());
         $this->assertSame('invitado sin costo', $inscripcion->observaciones);
-        foreach (['/inscripciones', '/inscripciones/imprimir'] as $url) {
+        foreach (['/inscripciones?evento_id='.$evento->id, '/inscripciones/imprimir'] as $url) {
             $this->get($url)->assertOk()->assertSee('invitado sin costo')->assertSee('Bs 0,00');
         }
         $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('invitado sin costo');

@@ -2,7 +2,7 @@
 @section('section', 'Evento')
 @section('title', $evento->exists ? 'Editar evento' : 'Nuevo evento')
 @section('subtitle', 'Define los detalles del encuentro y las tarifas para cada grado.')
-@section('actions')<a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary">← Volver a eventos</a>@endsection
+@section('actions')<a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="back" aria-label="Volver a eventos" title="Volver a eventos"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="button-label">Volver a eventos</span></a>@endsection
 @section('content')
 <form method="POST" enctype="multipart/form-data" action="{{ $evento->exists ? route('eventos.update', $evento) : route('eventos.store') }}" class="panel form-panel">
 @csrf @if($evento->exists) @method('PUT') @endif
@@ -53,7 +53,7 @@
 @endforeach
 </div>
 @if($grados->isEmpty())<div class="alert alert-warning">Debes <a href="{{ route('grados.index') }}">agregar al menos un grado</a> para configurar las tarifas.</div>@endif
-<div class="form-actions"><a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary">Cancelar</a><button class="btn btn-primary" @disabled($grados->isEmpty())>{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}</button></div>
+<div class="form-actions"><a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></a><button class="btn btn-primary btn-project" @disabled($grados->isEmpty()) data-action-style="save" aria-label="{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}" title="{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}</span></button></div>
 </form>
 @endsection
 @push('scripts')

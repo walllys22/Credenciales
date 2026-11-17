@@ -3,7 +3,7 @@
 @section('title', $grado->exists ? 'Editar grado' : 'Nuevo grado')
 @section('subtitle', 'Define el nombre del grado que utilizará tu organización.')
 @section('actions')
-    <a href="{{ route('grados.index') }}" class="btn btn-outline-secondary">← Volver a grados</a>
+    <a href="{{ route('grados.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="back" aria-label="Volver a grados" title="Volver a grados"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="button-label">Volver a grados</span></a>
 @endsection
 
 @section('content')
@@ -22,8 +22,8 @@
     @endif
     <x-field name="nombre" label="Nombre" :value="$grado->nombre" :required="true" maxlength="255" />
     <div class="form-actions">
-        <a href="{{ route('grados.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-        <button class="btn btn-primary">{{ $grado->exists ? 'Guardar cambios' : 'Crear grado' }}</button>
+        <a href="{{ route('grados.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></a>
+        <button class="btn btn-primary btn-project" data-action-style="save" aria-label="{{ $grado->exists ? 'Guardar cambios' : 'Crear grado' }}" title="{{ $grado->exists ? 'Guardar cambios' : 'Crear grado' }}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">{{ $grado->exists ? 'Guardar cambios' : 'Crear grado' }}</span></button>
     </div>
 </form>
 @endsection

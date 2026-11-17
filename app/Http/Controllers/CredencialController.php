@@ -20,7 +20,7 @@ class CredencialController extends Controller
     public function show(Request $request, Persona $persona)
     {
         $request->validate(['inscripcion' => 'nullable|integer|min:1']);
-        $persona->load('grado');
+        $persona->load(['grado', 'pais']);
         $inscripciones = $persona->inscripciones()->with('evento')->latest('id')->get();
         $inscripcion = $request->filled('inscripcion')
             ? $inscripciones->firstWhere('id', (int) $request->query('inscripcion'))
@@ -32,7 +32,7 @@ class CredencialController extends Controller
 
     public function porInscripcion(Inscripcion $inscripcion)
     {
-        $inscripcion->load(['persona.grado', 'evento']);
+        $inscripcion->load(['persona.grado', 'persona.pais', 'evento']);
 
         return $this->render($inscripcion->persona, $inscripcion);
     }

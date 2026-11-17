@@ -27,10 +27,10 @@ class CredencialTest extends TestCase
     {
         $persona = $this->persona();
         $this->withSession(['success' => 'Persona actualizada.'])->get('/personas')->assertOk()
-            ->assertDontSee('fa-regular fa-id-badge')
+            ->assertDontSee('data-action-style="credential"', false)
             ->assertDontSee('overview-banner')->assertSee('Persona actualizada.')->assertSee('id="app-notifications"', false);
         $inscripcion = $this->inscripcion($persona);
-        $this->get('/inscripciones')->assertOk()->assertSee('fa-regular fa-id-badge')
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertSee('data-action-style="credential"', false)
             ->assertSee(route('inscripciones.credencial', $inscripcion), false);
     }
 
@@ -59,12 +59,14 @@ class CredencialTest extends TestCase
     public function test_three_sides_contain_real_person_and_event_data_and_qr(): void
     {
         $persona = $this->persona(); $inscripcion = $this->inscripcion($persona);
+        $persona->update(['pais_id' => \App\Models\Pais::where('nombre', 'Bolivia')->value('id')]);
         $response = $this->get(route('personas.credencial', $persona));
         $response->assertOk()->assertViewIs('personas.vercred')->assertSee('Anverso')->assertSee('Reverso')->assertSee('Ficha')
             ->assertSee('Ana Pérez')->assertSee('1234567')->assertSee('Dan')->assertSee('Participante')
             ->assertSee('Seminario Internacional')->assertSee('02/12/2026')->assertSee('05/12/2026')
             ->assertSee('Coliseo La Pampita')->assertSee('Trinidad, Beni')->assertSee('data:image/svg+xml;base64,', false)->assertSee('Imprimir')
-            ->assertSee('images/anverso.png', false)->assertSee('images/reverso.png', false)->assertSee('images/Ficha1.png', false);
+            ->assertSee('images/anverso.png', false)->assertSee('images/reverso.png', false)->assertSee('images/Ficha1.png', false)
+            ->assertSee('credential-country')->assertSee('Bolivia')->assertSee('images/banderas/bo.svg', false);
         $qr = $response->viewData('qr');
         $this->assertStringContainsString('<svg', base64_decode(explode(',', $qr, 2)[1]));
         $this->get($response->viewData('verificacionUrl'))->assertOk()->assertSee('mobile-ficha')->assertSee('Ana Pérez');

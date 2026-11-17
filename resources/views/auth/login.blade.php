@@ -7,6 +7,8 @@
     <link rel="icon" href="{{ asset('images/icono.png') }}?v={{ hash_file('sha256', public_path('images/icono.png')) }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/login.css') }}?v={{ filemtime(public_path('css/login.css')) }}">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/botones.css') }}?v={{ filemtime(public_path('css/botones.css')) }}">
 </head>
 <body>
 <main class="login-layout">
@@ -36,7 +38,7 @@
                     </div>
                 </div>
                 <div class="form-check login-remember"><input id="remember" name="remember" type="checkbox" class="form-check-input" value="1" @checked(old('remember'))><label for="remember" class="form-check-label">Mantener sesión iniciada</label></div>
-                <button class="btn login-submit w-100" type="submit">Ingresar</button>
+                <button class="btn login-submit w-100 btn-project" type="submit" data-action-style="login" aria-label="Ingresar" title="Ingresar"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i><span class="button-label">Ingresar</span></button>
             </form>
         </div>
     </section>

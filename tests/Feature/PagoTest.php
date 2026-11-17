@@ -33,7 +33,7 @@ class PagoTest extends TestCase
         $inscripcion = $this->inscripcion();
         $otra = $this->inscripcion();
         $url = route('inscripciones.pagos.create', $inscripcion);
-        $this->get('/inscripciones')->assertOk()->assertSee($url, false)->assertSee('Agregar pago');
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertSee($url, false)->assertSee('Agregar pago');
         $this->get($url)->assertOk()->assertSee('Ana Pérez')->assertSee('590,50')->assertSee('todavía no tiene pagos');
         foreach (['100.25', '50.10'] as $monto) {
             $this->post($url, [
@@ -181,11 +181,12 @@ class PagoTest extends TestCase
     {
         $inscripcion = $this->inscripcion();
         $sinPagos = $this->inscripcion();
+        $sinPagos->update(['evento_id' => $inscripcion->evento_id]);
         $inscripcion->evento->update(['tipo_cambio' => '6.96']);
         $url = route('inscripciones.pagos.store', $inscripcion);
         $this->post($url, ['monto' => '100', 'moneda' => 'BOB', 'fecha' => '2026-01-01'])->assertSessionHasNoErrors();
         $this->post($url, ['monto' => '10', 'moneda' => 'USD', 'fecha' => '2026-01-02'])->assertSessionHasNoErrors();
-        $this->get('/inscripciones')->assertOk()->assertSeeInOrder(['Tarifa vigente', '<th>Saldo</th>', 'Acciones'], false)
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertSeeInOrder(['<th>Costo / Pagado / Saldo</th>', 'Acciones', 'Costo:', 'Pagado:', 'Saldo:'], false)
             ->assertSee('Bs 420,90')->assertViewHas('inscripciones', fn ($items) =>
                 $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '420.90'
                 && $items->firstWhere('id', $sinPagos->id)->saldo_pendiente === '590.50');
@@ -193,7 +194,7 @@ class PagoTest extends TestCase
         $this->delete(route('inscripciones.pagos.destroy', [$inscripcion, $pago]))->assertSessionHas('success');
         $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertSee('Bs 490,50');
         $inscripcion->pagos()->create(['monto' => '600', 'fecha' => '2026-01-03']);
-        $this->get('/inscripciones')->assertOk()->assertViewHas('inscripciones', fn ($items) =>
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertViewHas('inscripciones', fn ($items) =>
             $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '0.00');
     }
 
@@ -213,10 +214,10 @@ class PagoTest extends TestCase
         $this->get($url)->assertOk()->assertViewHas('totalPagado', '500.00')->assertViewHas('totalDescuento', '90.50')
             ->assertViewHas('saldoPendiente', '0.00')->assertViewHas('saldoAFavor', '0.00')
             ->assertViewHas('pagos', fn ($pagos) => $pagos[0]->saldo_pendiente === '0.00' && $pagos[1]->saldo_pendiente === '490.50');
-        $this->get('/inscripciones')->assertViewHas('inscripciones', fn ($items) => $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '0.00');
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertViewHas('inscripciones', fn ($items) => $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '0.00');
         $this->delete(route('inscripciones.pagos.destroy', [$inscripcion, $pago]))->assertSessionHas('success');
         $this->get($url)->assertViewHas('saldoPendiente', '490.50')->assertViewHas('totalDescuento', '0.00');
-        $this->get('/inscripciones')->assertViewHas('inscripciones', fn ($items) => $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '490.50');
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertViewHas('inscripciones', fn ($items) => $items->firstWhere('id', $inscripcion->id)->saldo_pendiente === '490.50');
     }
 
     public function test_total_payment_discount_uses_converted_dollar_amount(): void

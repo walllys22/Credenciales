@@ -43,7 +43,7 @@ class CertificadoTest extends TestCase
         $segunda->persona->update(['primer_nombre' => 'Luis', 'primer_apellido' => 'Zabala', 'segundo_apellido' => null]);
         $this->get(route('inscripciones.certificado', $segunda))->assertOk()->assertSee('Sensei Luis Zabala')->assertDontSee('Sensei Walter');
         $this->get(route('inscripciones.certificado', $primera))->assertOk()->assertSee('Sensei Walter Landivar Limpias');
-        $this->get('/inscripciones')->assertOk()->assertSee('registration-actions')->assertSee('images/diploma.png', false)
+        $this->get('/inscripciones?evento_id='.$segunda->evento_id)->assertOk()->assertSee('registration-actions')->assertSee('data-action-style="certificate"', false)->assertSee('images/diploma.png', false)
             ->assertSee(route('inscripciones.certificado', $segunda), false)->assertSee('title="Certifica"', false);
     }
 }

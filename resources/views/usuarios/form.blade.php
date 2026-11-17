@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $usuario->exists ? 'Editar usuario' : 'Crear usuario')
 @section('section', 'Usuarios')
-@section('actions')<a href="{{ route('usuarios.index') }}" class="btn btn-close-page">Cerrar</a>@endsection
+@section('actions')<a href="{{ route('usuarios.index') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>@endsection
 @section('content')
 <form class="panel" method="POST" action="{{ $usuario->exists ? route('usuarios.update', $usuario) : route('usuarios.store') }}">@csrf @if($usuario->exists) @method('PUT') @endif
 <div class="row g-3">
@@ -10,5 +10,5 @@
 <div class="col-md-6"><label for="active" class="form-label">Estado</label><select id="active" name="active" class="form-select"><option value="1" @selected(old('active', $usuario->active))>Activo</option><option value="0" @selected(!old('active', $usuario->active))>Inactivo</option></select></div>
 <div class="col-md-6"><label for="password" class="form-label">{{ $usuario->exists ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</label><input id="password" name="password" type="password" class="form-control" autocomplete="new-password" minlength="8" @required(!$usuario->exists)></div>
 <div class="col-md-6"><label for="password_confirmation" class="form-label">Confirmar contraseña</label><input id="password_confirmation" name="password_confirmation" type="password" class="form-control" autocomplete="new-password" @required(!$usuario->exists)></div>
-</div><button class="btn btn-create mt-4">Guardar</button></form>
+</div><button class="btn btn-create mt-4 btn-project" data-action-style="save" aria-label="Guardar" title="Guardar"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">Guardar</span></button></form>
 @endsection

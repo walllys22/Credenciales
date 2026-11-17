@@ -8,7 +8,7 @@
     @endforeach
 </div>
 <section class="panel">
-    <div class="panel-toolbar"><h2>Eventos próximos y en curso</h2><a class="btn btn-primary" href="{{ route('eventos.index') }}">Ver eventos</a></div>
+    <div class="panel-toolbar"><h2>Eventos próximos y en curso</h2><a class="btn btn-primary btn-project" href="{{ route('eventos.index') }}" data-action-style="view" aria-label="Ver eventos" title="Ver eventos"><i class="fa-solid fa-eye" aria-hidden="true"></i><span class="button-label">Ver eventos</span></a></div>
     <div class="table-responsive"><table class="table align-middle dashboard-table"><thead><tr><th>Evento</th><th>Ciudad</th><th>Fechas</th><th>Inscripciones</th></tr></thead><tbody>
     @forelse($proximos as $evento)
         <tr><td><div class="event-name"><img class="event-thumbnail" src="{{ $evento->imagen_url }}" alt="Imagen de {{ $evento->nombre }}" loading="lazy"><a href="{{ route('eventos.edit', $evento) }}">{{ $evento->nombre }}</a></div></td><td>{{ $evento->ciudad }}</td><td>{{ $evento->fecha_inicio->format('d/m/Y') }} al {{ $evento->fecha_final->format('d/m/Y') }}</td><td><a href="{{ route('inscripciones.index', ['evento_id' => $evento->id]) }}">{{ $evento->inscripciones_count }} inscritos</a></td></tr>

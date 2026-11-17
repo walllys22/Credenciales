@@ -107,8 +107,9 @@ class AuthenticationTest extends TestCase
         $operator = User::where('username', 'impresiones')->firstOrFail();
         $this->actingAs($operator);
         $this->get('/')->assertRedirect('/inscripciones');
-        $this->get('/inscripciones')->assertOk()->assertSee(route('inscripciones.credencial', $inscripcion), false)->assertSee(route('inscripciones.certificado', $inscripcion), false)
-            ->assertDontSee(route('inscripciones.edit', $inscripcion), false)->assertDontSee(route('inscripciones.pagos.create', $inscripcion), false)->assertDontSee('Nueva inscripción')->assertDontSee('Tarifa vigente')->assertDontSee('Limpiar caché');
+        $this->get('/inscripciones?evento_id='.$inscripcion->evento_id)->assertOk()->assertSee(route('inscripciones.credencial', $inscripcion), false)->assertSee(route('inscripciones.certificado', $inscripcion), false)
+            ->assertDontSee(route('inscripciones.edit', $inscripcion), false)->assertDontSee(route('inscripciones.pagos.create', $inscripcion), false)->assertDontSee('Nueva inscripción')->assertDontSee('Tarifa vigente')->assertDontSee('Limpiar caché')
+            ->assertDontSee('ver-participante-'.$inscripcion->id)->assertDontSee('Fecha de nacimiento');
         $this->get(route('inscripciones.credencial', $inscripcion))->assertOk();
         $this->get(route('inscripciones.certificado', $inscripcion))->assertOk();
         foreach (['/dashboard', '/personas', '/eventos', '/grados', '/paises', '/usuarios', '/inscripciones/create', '/inscripciones/imprimir', '/inscripciones/'.$inscripcion->id.'/pagos', '/inscripciones/'.$inscripcion->id.'/edit'] as $url) {

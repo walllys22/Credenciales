@@ -3,8 +3,8 @@
 @section('title', 'Certificado')
 @section('heading-icon')<img src="{{ asset('images/diploma.png') }}" width="25" height="25" alt="">@endsection
 @section('actions')
-    <button type="button" class="btn btn-create" id="print-certificate"><i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir</button>
-    <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page"><i class="fa-solid fa-door-open" aria-hidden="true"></i> Cerrar</a>
+    <button type="button" class="btn btn-create btn-project" id="print-certificate" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
+    <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 @endsection
 @section('content')
 <div class="certificate-stage">
