@@ -58,8 +58,8 @@ class AuthenticationTest extends TestCase
     public function test_both_logins_and_logout(): void
     {
         $this->users();
-        foreach ([['superadmin', 'password1234', '/dashboard'], ['impresiones', 'imprime1234', '/inscripciones']] as [$username, $password, $destination]) {
-            $this->post('/login', compact('username', 'password'))->assertRedirect($destination);
+        foreach ([['superadmin@credencial.com', 'password1234', '/dashboard'], ['impresiones@credencial.com', 'imprime1234', '/inscripciones']] as [$email, $password, $destination]) {
+            $this->post('/login', compact('email', 'password'))->assertRedirect($destination);
             $this->assertAuthenticated();
             $this->get('/login')->assertRedirect($destination);
             $this->post('/logout')->assertRedirect('/login');
@@ -67,16 +67,36 @@ class AuthenticationTest extends TestCase
         }
     }
 
+    public function test_existing_seed_accounts_keep_their_password_when_email_is_updated(): void
+    {
+        $this->users();
+        $admin = User::where('username', 'superadmin')->firstOrFail();
+        $admin->update(['email' => 'superadmin@credencial.local', 'password' => 'changed12345']);
+        $hash = $admin->password;
+        $this->users();
+        $this->assertSame('superadmin@credencial.com', $admin->fresh()->email);
+        $this->assertSame($hash, $admin->fresh()->password);
+        $this->assertDatabaseCount('users', 2);
+    }
+
+    public function test_login_design_and_remember_session(): void
+    {
+        $this->users();
+        $this->get('/login')->assertOk()->assertSee('images/Login.png', false)->assertSee('images/Logo.png', false)->assertSee('name="email"', false)->assertSee('id="toggle-password"', false);
+        $this->post('/login', ['email' => 'superadmin@credencial.com', 'password' => 'password1234', 'remember' => '1'])->assertRedirect('/dashboard')->assertCookie(\Illuminate\Support\Facades\Auth::guard()->getRecallerName());
+        $this->get('/dashboard')->assertOk()->assertSee('id="account-menu"', false)->assertSee('data-bs-toggle="dropdown"', false)->assertSee('Cerrar sesión')->assertSee('images/Logo.png', false);
+    }
+
     public function test_wrong_password_inactive_account_and_rate_limit(): void
     {
         $this->users();
         for ($i = 0; $i < 6; $i++) {
-            $response = $this->post('/login', ['username' => 'superadmin', 'password' => 'wrong']);
+            $response = $this->post('/login', ['email' => 'superadmin@credencial.com', 'password' => 'wrong']);
         }
-        $response->assertSessionHasErrors('username');
+        $response->assertSessionHasErrors('email');
         $this->assertGuest();
         User::where('username', 'impresiones')->update(['active' => false]);
-        $this->post('/login', ['username' => 'impresiones', 'password' => 'imprime1234'])->assertSessionHasErrors('username');
+        $this->post('/login', ['email' => 'impresiones@credencial.com', 'password' => 'imprime1234'])->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 

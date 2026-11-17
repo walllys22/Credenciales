@@ -28,7 +28,7 @@ class CredencialMovilTest extends TestCase
         $mobile = $this->get($url)->assertOk()->assertViewIs('personas.verificarcred')
             ->assertSee('mobile-ficha')->assertSee('credential-file')->assertSee('Luis Zabala')->assertSee('5588395')
             ->assertSee('Organizador')->assertSee('70012345')->assertSee('02/12/2026')->assertSee('05/12/2026')
-            ->assertSee('images/icono.png', false)->assertSee('images/Ficha1.png', false)->assertDontSee('images/Logo.png', false)
+            ->assertSee('images/Logo.png', false)->assertSee('images/Ficha1.png', false)->assertDontSee('images/icono.png', false)
             ->assertDontSee('sidebar')->assertDontSee('Anverso')->assertDontSee('Reverso')->assertDontSee('Imprimir');
         $this->get($mobile->viewData('fotoUrl'))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
         $this->get($mobile->viewData('eventoImagenUrl'))->assertOk()->assertHeader('Content-Type', 'image/png');

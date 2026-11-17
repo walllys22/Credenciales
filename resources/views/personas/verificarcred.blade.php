@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <title>Ficha · {{ $persona->nombre_completo }}</title>
-    <link rel="icon" href="{{ asset('images/icono.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('images/icono.png') }}?v={{ hash_file('sha256', public_path('images/icono.png')) }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('css/credenciales.css') }}?v={{ filemtime(public_path('css/credenciales.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/credencial-movil.css') }}?v={{ filemtime(public_path('css/credencial-movil.css')) }}">
 </head>

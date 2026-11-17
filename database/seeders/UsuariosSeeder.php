@@ -9,11 +9,20 @@ class UsuariosSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach ([['superadmin', 'password1234', 'superadmin'], ['impresiones', 'imprime1234', 'impresiones']] as [$username, $password, $role]) {
-            User::firstOrCreate(['username' => $username], [
-                'name' => $username, 'email' => $username.'@credencial.local',
+        $usuarios = [
+            ['username' => 'superadmin', 'email' => 'superadmin@credencial.com', 'password' => 'password1234', 'role' => 'superadmin'],
+            ['username' => 'impresiones', 'email' => 'impresiones@credencial.com', 'password' => 'imprime1234', 'role' => 'impresiones'],
+        ];
+
+        foreach ($usuarios as $datos) {
+            ['username' => $username, 'email' => $email, 'password' => $password, 'role' => $role] = $datos;
+            $user = User::firstOrCreate(['username' => $username], [
+                'name' => $username, 'email' => $email,
                 'password' => $password, 'role' => $role, 'active' => true,
             ]);
+            if ($user->email === $username.'@credencial.local') {
+                $user->update(['email' => $email]);
+            }
         }
     }
 }

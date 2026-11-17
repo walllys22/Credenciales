@@ -2,6 +2,17 @@
 
 Actualizada: 12 de noviembre de 2026 (America/La_Paz).
 
+## Actualización obligatoria de esta memoria
+
+Por instrucción expresa del usuario, **cada cambio en el proyecto debe actualizar
+este archivo dentro de la misma tarea, antes de darla por terminada**.
+La regla también está registrada en `AGENTS.md` para futuras sesiones.
+Cada actualización debe corregir las secciones afectadas y registrar fecha,
+cambio, archivos principales, verificaciones y resultados en el historial.
+Si no se ejecutan pruebas, indicar el motivo; no presentar verificaciones
+históricas como nuevas. Mantener explícitas las limitaciones y pendientes reales.
+Una explicación en el chat no reemplaza la actualización de esta memoria.
+
 ## Alcance y referencia
 
 Sistema de control de personas, países, grados, eventos, inscripciones, pagos,
@@ -14,7 +25,7 @@ y el historial con las verificaciones realmente ejecutadas.
 
 ## Autenticación y usuarios
 
-- Inicio de sesión por **nombre de usuario**, no correo: GET/POST `/login`.
+- Inicio de sesión por **correo electrónico**: GET/POST `/login`.
 - POST `/logout` cierra la sesión, la invalida y regenera el token CSRF.
 - AuthController valida usuario activo, regenera la sesión al ingresar y limita
   a cinco intentos fallidos por combinación de usuario/IP durante 60 segundos.
@@ -25,7 +36,7 @@ y el historial con las verificaciones realmente ejecutadas.
   nullable/único (compatibilidad con registros anteriores), role por defecto
   impresiones y active booleano por defecto true. Las nuevas altas requieren username.
 - El correo es obligatorio y único para gestionar usuarios; las cuentas iniciales
-  usan direcciones locales `superadmin@credencial.local` e `impresiones@credencial.local`.
+  usan direcciones locales `superadmin@credencial.com` e `impresiones@credencial.com`.
   No hay recuperación de contraseña por correo implementada en esta tarea.
 - Migración: `2026_11_12_000001_add_user_access_fields.php`; conserva datos existentes.
 
@@ -35,11 +46,12 @@ y el historial con las verificaciones realmente ejecutadas.
 
 | Usuario | Contraseña inicial | Rol | Entrada |
 | --- | --- | --- | --- |
-| superadmin | password1234 | superadmin | /dashboard |
-| impresiones | imprime1234 | impresiones | /inscripciones |
+| superadmin@credencial.com | password1234 | superadmin | /dashboard |
+| impresiones@credencial.com | imprime1234 | impresiones | /inscripciones |
 
 El seeder usa firstOrCreate por username: repetirlo no reinicia contraseñas,
-roles ni estado de cuentas existentes. DatabaseSeeder también lo invoca y
+roles ni estado de cuentas existentes. Si una cuenta inicial conserva su correo
+@credencial.local, el seeder lo actualiza a @credencial.com sin tocar su hash. DatabaseSeeder también lo invoca y
 mantiene la creación del grado Sin grado. Para cambiar una contraseña existente,
 usar Usuarios; el campo vacío al editar conserva el hash actual.
 
@@ -154,8 +166,85 @@ física de impresora ni revisión visual interactiva del navegador.
 
 ## Historial
 
+### 12/11/2026: imagen del perfil de impresiones
+
+El perfil del rol impresiones muestra `public/images/Impresiones.png` en lugar
+de las iniciales, con URL versionada por SHA-256. Superadmin conserva icono.png.
+El menú desplegable y Cerrar sesión mantienen su funcionamiento.
+Archivos: resources/views/layouts/app.blade.php y certificado.md.
+Verificación: archivo de imagen presente y compilación/limpieza Blade correctas.
+Sin pruebas nuevas por ser una sustitución visual reversible; sin QA interactiva.
+
+Ajuste del 12/11/2026: UsuariosSeeder declara explícitamente los correos
+superadmin@credencial.com e impresiones@credencial.com y las contraseñas iniciales
+password1234 e imprime1234. Conserva los hashes de cuentas existentes y migra los
+correos anteriores @credencial.local sin duplicar usuarios. Verificación dirigida:
+pruebas de seeder repetible, conservación de contraseña y acceso con ambos correos.
+
+Corrección posterior del 12/11/2026: por solicitud del usuario, la imagen junto
+al título Credencial en la tarjeta de login usa public/images/icono.png con
+versión SHA-256. Esta indicación reemplaza el uso de Logo.png sólo en ese bloque;
+los demás logos mantienen sus referencias. Verificado mediante compilación Blade.
+
+Ajuste del 12/11/2026: confirmado Logo.png en el encabezado de la tarjeta de
+login. Esa imagen usa hash SHA-256 del archivo como versión de URL para cargar
+el contenido actual incluso si el reemplazo conserva la fecha de modificación.
+Verificación: compilación y limpieza de vistas Blade; sin cambios de autenticación.
+
+El acceso incluye un botón de ojo a la derecha de Contraseña para alternar
+entre texto visible y oculto. No envía el formulario; actualiza su etiqueta
+Mostrar/Ocultar y aria-pressed. Script: public/js/password-toggle.js.
+Verificación de este ajuste: sintaxis JavaScript y compilación Blade; no se
+repitió la suite PHP por tratarse de un control visual sin cambios de autenticación.
+
 | Fecha | Cambio | Archivos principales |
 | --- | --- | --- |
+| 2026-11-12 | Registrada la obligación de actualizar esta memoria en cada cambio. Revisión documental; no requiere pruebas de aplicación. | AGENTS.md, certificado.md |
+| 2026-11-12 | Ojo para mostrar/ocultar contraseña en el acceso | auth/login.blade.php, public/js/password-toggle.js, certificado.md |
 | 2026-11-12 | Listado de costos en dólares con tipo de cambio debajo | resources/views/eventos/index.blade.php |
 | 2026-11-12 | Inicio/cierre de sesión, dos roles, gestión de usuarios, seeder y autorización en servidor/interfaz | AuthController, UsuarioController, ProjectAccess, User, routes/web.php, bootstrap/app.php, migración de acceso, UsuariosSeeder, vistas auth/usuarios/layouts/inscripciones y pruebas |
 | 2026-11-12 | URLs versionadas para arte modificado por operador y memoria técnica | personas/vercred.blade.php, personas/ficha.blade.php, certificado.md |
+
+## Actualización del acceso e identidad (12/11/2026)
+
+Login con dos paneles: imagen public/images/Login.png a la izquierda (60%) y
+formulario en tarjeta gris a la derecha (40%), botón verde y campos con foco verde.
+En móviles se apilan. CSS en public/css/login.css. Conserva el ojo de contraseña.
+Mantener sesión iniciada envía remember al guard de Laravel; CSRF y límite de
+intentos permanecen. El acceso ahora exige email. Se omiten recuperación y
+versión del ejemplo porque no hay flujo de recuperación ni versión propia definida.
+
+Logo.png se conserva en el menú expandido, pie de credenciales y ficha pública.
+icono.png se usa en el encabezado del login, favicon, perfil de superadmin y menú
+contraído. Las URLs están versionadas para reflejar reemplazos. Los iconos de
+acciones, fotos y plantillas conservan sus archivos específicos. El avatar de
+superadmin usa icono.png y su botón abre un menú Bootstrap hacia abajo con
+Cerrar sesión por POST y CSRF. No se regeneraron las imágenes del operador.
+
+Se actualizó el seeder y se ejecutó en la base configurada para aplicar los
+correos solicitados manteniendo contraseñas. Se ajustaron las pruebas de login y
+ficha pública al correo y logo vigentes. Las verificaciones de esta actualización
+se registran al terminar; los resultados anteriores son históricos.
+
+Verificaciones finales de esta actualización: suite de 67 pruebas PHP / 724
+aserciones aprobadas, seguida de 8 pruebas de autenticación / 103 aserciones
+aprobadas tras agregar los casos de remember y cambio de correo sin alterar hash.
+Blade compila correctamente; sintaxis PHP y JavaScript correctas. No quedan
+referencias a images/icono.png en vistas. Ambos correos comprobados en la base
+operativa: activos y con las contraseñas originales. Sin revisión visual
+interactiva ni prueba física de impresora en esta actualización.
+
+Ajuste del 12/11/2026: favicon de login, panel administrativo y ficha pública
+usa public/images/icono.png, con versión SHA-256 para actualizar la caché.
+Los logos dentro de las pantallas conservan sus referencias. Verificación:
+compilación y limpieza de vistas Blade correctas.
+
+### 12/11/2026: icono en perfil y menú contraído
+
+El perfil de superadmin usa icono.png. El menú expandido conserva Logo.png;
+al contraerlo en escritorio (desde 992 px), CSS muestra icono.png en su lugar.
+En móviles se mantiene el logo expandido. No cambia el desplegable de sesión.
+Archivos: resources/views/layouts/app.blade.php, public/css/dashboard.css y
+certificado.md. Verificación: compilación y limpieza Blade correctas; sin nuevas
+pruebas automatizadas por ser cambio reversible de imagen/CSS. Sin QA visual
+interactiva en esta tarea.

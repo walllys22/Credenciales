@@ -16,14 +16,16 @@ class AuthController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate(['username' => 'required|string|max:255', 'password' => 'required|string']);
-        $key = 'login:'.hash('sha256', mb_strtolower($data['username']).'|'.$request->ip());
+        $data = $request->validate(['email' => 'required|email|max:255', 'password' => 'required|string', 'remember' => 'sometimes|boolean']);
+        unset($data['remember']);
+        $data['email'] = mb_strtolower(trim($data['email']));
+        $key = 'login:'.hash('sha256', $data['email'].'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            throw ValidationException::withMessages(['username' => 'Demasiados intentos. Intenta de nuevo en '.RateLimiter::availableIn($key).' segundos.']);
+            throw ValidationException::withMessages(['email' => 'Demasiados intentos. Intenta de nuevo en '.RateLimiter::availableIn($key).' segundos.']);
         }
-        if (! Auth::attempt($data + ['active' => true])) {
+        if (! Auth::attempt($data + ['active' => true], $request->boolean('remember'))) {
             RateLimiter::hit($key, 60);
-            throw ValidationException::withMessages(['username' => 'Usuario o contraseña incorrectos.']);
+            throw ValidationException::withMessages(['email' => 'Correo o contraseña incorrectos.']);
         }
         RateLimiter::clear($key);
         $request->session()->regenerate();

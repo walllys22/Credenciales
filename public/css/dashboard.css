@@ -13,3 +13,6 @@ body{font:400 16px/1.5 Calibri,'Segoe UI',Arial,sans-serif;background:var(--pape
 @media(min-width:992px){body.sidebar-collapsed .sidebar .brand.brand-image img{width:56px;height:auto;max-height:60px}}
 @media(max-width:575px){.person-photo-upload{flex-direction:column;align-items:stretch}.person-photo-upload>img{align-self:center}}
 .cache-button .nav-icon{width:20px;justify-content:center}
+
+.sidebar .brand.brand-image .brand-collapsed{display:none}
+@media(min-width:992px){body.sidebar-collapsed .sidebar .brand.brand-image .brand-expanded{display:none}body.sidebar-collapsed .sidebar .brand.brand-image .brand-collapsed{display:block}}

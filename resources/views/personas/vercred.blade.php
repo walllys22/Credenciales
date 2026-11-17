@@ -20,7 +20,7 @@
                     <img class="credential-photo" src="{{ $persona->foto_url }}" alt="Foto de {{ $persona->nombre_completo }}">
                     <dl class="credential-data"><div><dt>Nombre:</dt><dd>{{ $persona->nombre_completo }}</dd></div><div><dt>Cargo:</dt><dd>{{ $inscripcion->cargo }}</dd></div><div><dt>Grado:</dt><dd>{{ $persona->grado->nombre }}</dd></div><div><dt>CI:</dt><dd>{{ $persona->documento_identidad }}</dd></div></dl>
                 </div>
-                <div class="credential-bottom"><img src="{{ asset('images/icono.png') }}" alt="Control de Inscripciones"><span>#{{ str_pad($inscripcion->id, 6, '0', STR_PAD_LEFT) }}</span></div>
+                <div class="credential-bottom"><img src="{{ asset('images/Logo.png') }}?v={{ filemtime(public_path('images/Logo.png')) }}" alt="Control de Inscripciones"><span>#{{ str_pad($inscripcion->id, 6, '0', STR_PAD_LEFT) }}</span></div>
             </article>
         </section>
         <section class="credential-side">
@@ -33,7 +33,7 @@
                     <p class="credential-event-title">{{ $evento->nombre }}</p>
                     <p class="credential-dates">{{ $evento->fecha_inicio->format('d/m/Y') }} al {{ $evento->fecha_final->format('d/m/Y') }}<br>{{ $evento->lugar }}<br>{{ $evento->ciudad }}</p>
                 </div>
-                <div class="credential-bottom"><img src="{{ asset('images/icono.png') }}" alt="Control de Inscripciones"><span>#{{ str_pad($inscripcion->id, 6, '0', STR_PAD_LEFT) }}</span></div>
+                <div class="credential-bottom"><img src="{{ asset('images/Logo.png') }}?v={{ filemtime(public_path('images/Logo.png')) }}" alt="Control de Inscripciones"><span>#{{ str_pad($inscripcion->id, 6, '0', STR_PAD_LEFT) }}</span></div>
             </article>
         </section>
         <section class="credential-side credential-file-section">
