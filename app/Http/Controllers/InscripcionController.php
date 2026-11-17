@@ -34,17 +34,17 @@ class InscripcionController extends Controller
     public function pdf(Request $request, \App\Support\ReportePdf $generador)
     {
         try {
-            $pdf = $generador->generar($this->imprimir($request)->render());
+            $pdf = $generador->generar($this->imprimir($request)->getData());
         } catch (\RuntimeException $exception) {
             report($exception);
 
             return redirect()->route('inscripciones.imprimir', $request->only('evento_id'))
-                ->with('error', 'No se pudo generar el PDF. Comprueba que Chrome o Edge esté instalado en el servidor.');
+                ->with('error', 'No se pudo generar el PDF. Vuelve a intentar la descarga.');
         }
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="participantes-inscritos.pdf"',
+            'Content-Disposition' => ($request->boolean('vista') ? 'inline' : 'attachment').'; filename="participantes-inscritos.pdf"',
         ]);
     }
 

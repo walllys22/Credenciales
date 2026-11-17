@@ -11,6 +11,24 @@ class InscripcionesImprimirTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_pdf_download_preserves_filter_and_uses_attachment_before_print_button(): void
+    {
+        $event = Evento::create(['nombre' => 'PDF', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
+        $this->mock(\App\Support\ReportePdf::class, function ($mock) {
+            $mock->shouldReceive('generar')->twice()->withArgs(fn ($data) => $data['tiposCambioReporte']->first()->nombre === 'PDF')->andReturn('%PDF-1.7 prueba');
+        });
+        $this->get(route('inscripciones.imprimir', ['evento_id' => $event->id]))->assertOk()
+            ->assertSeeInOrder(['data-action-style="pdf"', 'data-action-style="print"'], false)
+            ->assertSee(route('inscripciones.pdf', ['evento_id' => $event->id]), false);
+        $this->get(route('inscripciones.pdf', ['evento_id' => $event->id]))->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename="participantes-inscritos.pdf"');
+        $this->get(route('inscripciones.pdf', ['evento_id' => $event->id, 'vista' => 1]))->assertOk()
+            ->assertHeader('Content-Disposition', 'inline; filename="participantes-inscritos.pdf"');
+        $this->actingAs(new \App\Models\User(['id' => 5, 'role' => 'impresiones', 'active' => true]));
+        $this->get(route('inscripciones.pdf'))->assertForbidden();
+    }
+
     public function test_report_lists_all_event_registrations_without_pagination(): void
     {
         $grado = Grado::create(['nombre' => 'Dan']);

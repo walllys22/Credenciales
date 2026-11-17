@@ -4,7 +4,7 @@
 @section('title', 'Personas inscritas')
 @section('actions')
     <a href="{{ route('inscripciones.pdf', request()->only('evento_id')) }}" class="btn btn-project" data-action-style="pdf" aria-label="Descargar PDF" title="Descargar PDF"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i><span class="button-label">PDF</span></a>
-    <button type="button" class="btn btn-create btn-project" id="print-registrations" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
+    <button type="button" class="btn btn-create btn-project" id="print-registrations" data-pdf-url="{{ route('inscripciones.pdf', array_merge(request()->only('evento_id'), ['vista' => 1])) }}" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
     <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 @endsection
 @section('content')
@@ -17,45 +17,9 @@
                 <tr><th class="report-number">N.º</th><th>Nombre completo</th><th>Documento</th><th>Grado</th><th>Costo</th><th>Pagado</th><th>Saldo</th></tr>
             </thead>
             <tbody class="report-participants">
-                @forelse($inscripciones as $inscripcion)
-                    <tr @class(['report-guest' => $inscripcion->invitado_sin_costo, 'report-paid' => !$inscripcion->invitado_sin_costo && $inscripcion->total_pagado > 0 && $inscripcion->saldo_pendiente == 0])>
-                        <td class="report-number">{{ $loop->iteration }}</td>
-                        <td><div class="report-participant-name">{{ $inscripcion->persona->nombre_completo }}</div><small class="d-block report-participant-organization">{{ $inscripcion->persona->organizacion ?: 'Sin organización registrada' }}</small></td>
-                        <td>{{ $inscripcion->persona->documento_identidad }}</td>
-                        <td>{{ $inscripcion->persona->grado->nombre }}</td>
-                        @if($inscripcion->invitado_sin_costo)
-                        <td colspan="3" class="text-center">Sin costo</td>
-                        @else
-                        <td class="text-nowrap">Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</td>
-                        <td class="text-nowrap">
-                            @if($inscripcion->pagado_bs > 0 || !($inscripcion->pagado_usd > 0))
-                                <div>Bs {{ number_format($inscripcion->pagado_bs ?? 0, 2, ',', '.') }}</div>
-                            @endif
-                            @if($inscripcion->pagado_usd > 0)
-                                <div>$us {{ number_format($inscripcion->pagado_usd, 2, ',', '.') }}</div>
-                            @endif
-                        </td>
-                        <td class="text-nowrap">Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</td>
-                        @endif
-                    </tr>
-                @empty
-                    <tr><td colspan="7">No hay personas inscritas.</td></tr>
-                @endforelse
+                @include('inscripciones.reporte-filas')
             </tbody>
-            <tbody class="report-payment-totals">
-                <tr><th colspan="5" scope="row">Pagado Bs.-</th><td colspan="2">{{ number_format($totalPagadoBs, 2, '.', ',') }}</td></tr>
-                <tr><th colspan="5" scope="row">Pagado $us.-</th><td colspan="2">{{ number_format($totalPagadoUsd, 2, '.', ',') }}</td></tr>
-                <tr class="report-debt-summary-row"><td colspan="7">
-                    <table class="report-debt-summary" aria-label="Resumen de deuda">
-                        <tbody>
-                            <tr><th scope="row">Participantes con deuda</th><td>{{ $participantesConDeuda }}</td></tr>
-                            <tr><th scope="row">Deuda pendiente Bs.-</th><td>{{ number_format($deudaTotalBs, 2, '.', ',') }}</td></tr>
-                            <tr><th scope="row">Deuda pendiente $us.-</th><td>{{ $deudaTotalUsd !== null ? number_format($deudaTotalUsd, 2, '.', ',') : 'Sin tipo de cambio' }}</td></tr>
-                            <tr><th scope="row">Tipo de cambio</th><td>@forelse($tiposCambioReporte as $eventoCambio)<div>@if($tiposCambioReporte->count() > 1){{ $eventoCambio->nombre }}: @endif{{ $eventoCambio->tipo_cambio ? 'Bs '.number_format($eventoCambio->tipo_cambio, 2, ',', '.').' por 1 $us' : 'Sin registrar' }}</div>@empty Sin registrar @endforelse</td></tr>
-                        </tbody>
-                    </table>
-                </td></tr>
-            </tbody>
+            @include('inscripciones.reporte-totales')
             <tfoot class="report-print-footer"><tr><td colspan="7"></td></tr></tfoot>
         </table>
     </div>
@@ -74,19 +38,28 @@
 @push('scripts')
 <script src="{{ asset('js/reporte-paginas.js') }}?v={{ filemtime(public_path('js/reporte-paginas.js')) }}" defer></script>
 <script>
-    // Abre la impresión después de revisar el listado completo.
+    // Imprime el mismo PDF de descarga, con cabecera y pie incorporados en cada hoja.
     document.getElementById('print-registrations').addEventListener('click', async () => {
         const button = document.getElementById('print-registrations');
-        const letterhead = document.querySelector('#report-source .report-letterhead');
         button.disabled = true;
         try {
-            await letterhead.decode();
-            await document.fonts?.ready;
-            window.prepararHojasReporte?.();
-            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-            window.print();
+            const response = await fetch(button.dataset.pdfUrl);
+            if (!response.ok || !response.headers.get('Content-Type')?.includes('application/pdf')) throw new Error('PDF');
+            const url = URL.createObjectURL(await response.blob());
+            document.getElementById('report-print-frame')?.remove();
+            const frame = document.createElement('iframe');
+            frame.id = 'report-print-frame';
+            frame.title = 'Impresión del reporte';
+            frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;border:0';
+            frame.onload = () => {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+                URL.revokeObjectURL(url);
+            };
+            frame.src = url;
+            document.body.append(frame);
         } catch (error) {
-            window.showAppMessage('No se pudo cargar la cabecera. Recarga la página antes de imprimir.');
+            window.showAppMessage('No se pudo preparar la impresión. Vuelve a intentarlo o descarga el PDF.');
         } finally {
             button.disabled = false;
         }
