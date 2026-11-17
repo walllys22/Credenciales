@@ -1,0 +1,12 @@
+/* Distribución compacta exclusiva del listado de inscripciones. */
+.topbar{height:64px;min-height:64px}
+#main-content{padding-top:6px}
+#main-content>.page-heading{min-height:54px;padding:8px 18px;margin-bottom:8px}
+#filtro-inscripciones{--bs-gutter-y:8px;margin:0;padding:0 12px 8px}
+#filtro-inscripciones .form-label{margin-bottom:4px}
+.registrations-index>.panel-toolbar{padding:8px 24px 12px}
+.registrations-index>.panel-toolbar h2{margin:0}
+@media(max-width:575px){
+    #main-content>.page-heading{padding:8px 12px}
+    .registrations-index>.panel-toolbar{padding:8px 12px 12px}
+}

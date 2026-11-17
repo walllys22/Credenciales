@@ -13,7 +13,7 @@ class CertificadoTest extends TestCase
     private function inscripcion(string $gradoNombre, string $documento = '1234567'): Inscripcion
     {
         $grado = Grado::firstOrCreate(['nombre' => $gradoNombre]);
-        $persona = Persona::create(['primer_nombre' => 'Walter', 'primer_apellido' => 'Landivar', 'segundo_apellido' => 'Limpias', 'documento_identidad' => $documento, 'sexo' => 'Masculino', 'fecha_nacimiento' => '1980-01-01', 'telefono' => '72841511', 'grado_id' => $grado->id]);
+        $persona = Persona::create(['primer_nombre' => 'Walter', 'primer_apellido' => 'Landivar', 'segundo_apellido' => 'Limpias', 'documento_identidad' => $documento, 'sexo' => 'Masculino', 'telefono' => '72841511', 'grado_id' => $grado->id]);
         $evento = Evento::create(['nombre' => 'Seminario Internacional Shorin Ryu Shorinkan - Karate & Kobudo', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo La Pampita', 'ciudad' => 'Trinidad, Beni']);
         return Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante']);
     }
@@ -34,6 +34,13 @@ class CertificadoTest extends TestCase
         $inscripcion = $this->inscripcion('Kyu');
         $this->get(route('inscripciones.certificado', $inscripcion))->assertOk()
             ->assertViewHas('nombreCertificado', 'Walter Landivar Limpias')->assertDontSee('Sensei Walter');
+    }
+
+    public function test_numbered_dan_certificate_uses_sensei_and_credential_displays_the_number(): void
+    {
+        $inscripcion = $this->inscripcion('3er Dan');
+        $this->get(route('inscripciones.certificado', $inscripcion))->assertOk()->assertSee('Sensei Walter Landivar Limpias');
+        $this->get(route('inscripciones.credencial', $inscripcion))->assertOk()->assertSee('3er Dan');
     }
 
     public function test_uppercase_dan_and_two_registrations_keep_their_own_names(): void

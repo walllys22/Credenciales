@@ -26,7 +26,6 @@
                             <dt class="col-sm-5">Segundo apellido</dt><dd class="col-sm-7">{{ $participante->segundo_apellido ?: '—' }}</dd>
                             <dt class="col-sm-5">Documento de identidad</dt><dd class="col-sm-7">{{ $participante->documento_identidad ?: '—' }}</dd>
                             <dt class="col-sm-5">Sexo</dt><dd class="col-sm-7">{{ $participante->sexo }}</dd>
-                            <dt class="col-sm-5">Fecha de nacimiento</dt><dd class="col-sm-7">{{ $participante->fecha_nacimiento?->format('d/m/Y') ?? '—' }}</dd>
                             <dt class="col-sm-5">Teléfono</dt><dd class="col-sm-7">{{ $participante->telefono ?: '—' }}</dd>
                             <dt class="col-sm-5">Grado</dt><dd class="col-sm-7"><x-grado-badge :nombre="$participante->grado->nombre"/></dd>
                             <dt class="col-sm-5">Organización</dt><dd class="col-sm-7">{{ $participante->organizacion ?: 'Sin registrar' }}</dd>
@@ -45,7 +44,7 @@
                     <dt class="col-sm-4">Invitado sin costo</dt><dd class="col-sm-8">{{ $inscripcion->invitado_sin_costo ? 'Sí' : 'No' }}</dd>
                     <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8">{{ $inscripcion->observaciones ?: 'Sin observaciones' }}</dd>
                     <dt class="col-sm-4">Costo</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</dd>
-                    <dt class="col-sm-4">Pagado</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->total_pagado, 2, ',', '.') }}</dd>
+                    <dt class="col-sm-4">Pagado</dt><dd class="col-sm-8">@include('inscripciones.importe-pagado')</dd>
                     <dt class="col-sm-4">Descuento</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->pagos_sum_descuento ?? 0, 2, ',', '.') }}</dd>
                     <dt class="col-sm-4">Saldo</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</dd>
                 </dl>

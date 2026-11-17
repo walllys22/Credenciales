@@ -18,8 +18,8 @@ class PersonaController extends Controller
         })->latest('id')->paginate(12)->withQueryString();
         return view('personas.index', compact('personas', 'q'));
     }
-    public function create() { return view('personas.form', ['persona' => new Persona, 'grados' => Grado::orderBy('nombre')->get()]); }
-    public function edit(Persona $persona) { return view('personas.form', ['persona' => $persona, 'grados' => Grado::orderBy('nombre')->get()]); }
+    public function create() { return view('personas.form', ['persona' => new Persona, 'grados' => Grado::ordenados()->get()]); }
+    public function edit(Persona $persona) { return view('personas.form', ['persona' => $persona, 'grados' => Grado::ordenados()->get()]); }
     private function validated(Request $request, ?Persona $persona = null): array
     {
         return \App\Support\DatosPersona::validated($request, $persona);

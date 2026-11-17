@@ -6,7 +6,7 @@ const path = require('node:path');
 
 function form({ guest = false, leader = '0', rate = '696.00', tariffs = { 1: { 1: '120.50' } } } = {}) {
     const field = value => ({ value, checked: false, dataset: {}, options: [{}, {}], listeners: {}, setCustomValidity() {}, addEventListener(name, fn) { this.listeners[name] = fn; } });
-    const elements = Object.fromEntries(['jefe_dojo', 'invitado_sin_costo', 'evento_id', 'persona_id', 'guardar-inscripcion', 'tariff-message', 'tariff-amount', 'observaciones', 'grado_id', 'pais_id', 'organizacion', 'foto', 'foto-preview', 'foto-client-error', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono'].map(id => [id, field('')]));
+    const elements = Object.fromEntries(['jefe_dojo', 'invitado_sin_costo', 'evento_id', 'persona_id', 'guardar-inscripcion', 'tariff-message', 'tariff-amount', 'observaciones', 'grado_id', 'pais_id', 'organizacion', 'foto', 'foto-preview', 'foto-client-error', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono'].map(id => [id, field('')]));
     elements.evento_id.value = '1';
     elements.persona_id.value = '1';
     elements.grado_id.value = '1';
@@ -22,7 +22,7 @@ function form({ guest = false, leader = '0', rate = '696.00', tariffs = { 1: { 1
         .replace(/{{ Illuminate\\Support\\Js::from\(\$tarifasJefe\) }}/, JSON.stringify({ 1: rate }))
         .replace(/{{ Illuminate\\Support\\Js::from\(\$grados->filter.*? }}/, JSON.stringify([1]))
         .replace(/{{ Illuminate\\Support\\Js::from\(\$opcionesPersonas\) }}/, JSON.stringify([{ id: 1, grado_id: 1, nombre: 'Ana', eventos_inscritos: [2], datos: { primer_nombre: 'Ana', grado_id: '1', pais_id: '2', organizacion: 'Shorin Ryu Shorinkan Bolivia' }, foto_url: '/personas/1/foto' }]));
-    script = script.replace("{{ asset('images/persona-default.svg') }}", '/images/persona-default.svg');
+    script = script.replace("{{ asset('images/default.jpg') }}", '/images/default.jpg');
     vm.runInNewContext(script, {
         document: { addEventListener: (_, fn) => fn(), getElementById: id => elements[id] },
         Option: function (text, value) { this.text = text; this.value = value; this.dataset = {}; },

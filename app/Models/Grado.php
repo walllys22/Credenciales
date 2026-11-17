@@ -4,6 +4,13 @@ use Illuminate\Database\Eloquent\Model;
 class Grado extends Model
 {
     public const DETALLADOS = ['10mo Kyu', '9no Kyu', '7mo Kyu', '6to Kyu', '5to Kyu', '4to Kyu', '3er Kyu', '2do Kyu', '1er Kyu', '1er Dan', '2do Dan', '3er Dan', '4to Dan', '5to Dan', '7mo Dan', '8vo Dan', '9no Dan', '10mo Dan'];
+    public function scopeOrdenados($query)
+    {
+        return $query
+            ->orderByRaw("CASE WHEN UPPER(TRIM(nombre)) LIKE '%KYU' THEN 0 WHEN UPPER(TRIM(nombre)) LIKE '%DAN' THEN 1 ELSE 2 END")
+            ->orderByRaw("CASE WHEN UPPER(TRIM(nombre)) LIKE '%KYU' THEN -CAST(nombre AS SIGNED) ELSE CAST(nombre AS SIGNED) END")
+            ->orderBy('nombre');
+    }
     public function esDan(): bool { return preg_match('/\bDAN$/u', mb_strtoupper(trim($this->nombre))) === 1; }
     public function categoria(): ?string
     {

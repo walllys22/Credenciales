@@ -15,28 +15,26 @@ class PersonaPhotoTest extends TestCase
     private function data(): array
     {
         $grado = Grado::firstOrCreate(['nombre' => 'Dan']);
-        return ['primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez', 'documento_identidad' => '1234567', 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-05-20', 'telefono' => '70012345', 'grado_id' => $grado->id];
+        return ['primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez', 'documento_identidad' => '1234567', 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado->id];
     }
 
-    public function test_birth_date_and_phone_are_optional_when_creating_and_editing(): void
+    public function test_phone_is_optional_when_creating_and_editing(): void
     {
         Storage::fake('local');
         $data = $this->data();
-        unset($data['fecha_nacimiento'], $data['telefono']);
+        unset($data['telefono']);
         $this->post('/personas', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])
             ->assertRedirect('/personas')->assertSessionHasNoErrors();
         $persona = Persona::firstOrFail();
-        $this->assertNull($persona->fecha_nacimiento);
         $this->assertNull($persona->telefono);
         $this->get(route('personas.edit', $persona))->assertOk();
-        $this->put(route('personas.update', $persona), $data + ['fecha_nacimiento' => '1995-05-20', 'telefono' => '70012345'])
+        $this->put(route('personas.update', $persona), $data + ['telefono' => '70012345'])
             ->assertSessionHasNoErrors();
-        $this->put(route('personas.update', $persona), $data + ['fecha_nacimiento' => '', 'telefono' => ''])
+        $this->put(route('personas.update', $persona), $data + ['telefono' => ''])
             ->assertSessionHasNoErrors();
-        $this->assertNull($persona->fresh()->fecha_nacimiento);
         $this->assertNull($persona->fresh()->telefono);
-        $this->put(route('personas.update', $persona), $data + ['fecha_nacimiento' => now()->addDay()->toDateString(), 'telefono' => str_repeat('1', 31)])
-            ->assertSessionHasErrors(['fecha_nacimiento', 'telefono']);
+        $this->put(route('personas.update', $persona), $data + ['telefono' => str_repeat('1', 31)])
+            ->assertSessionHasErrors('telefono');
     }
 
     public function test_photo_is_required_for_new_person_and_allows_exactly_five_mb(): void

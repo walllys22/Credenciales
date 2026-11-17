@@ -8,14 +8,15 @@
 @endsection
 @section('content')
 <section class="panel registrations-report">
-    <img class="report-letterhead" src="{{ asset('images/Membrete.png') }}" alt="" aria-hidden="true">
+    <img class="report-letterhead" src="{{ asset('images/Cabecera.png') }}?v={{ hash_file('sha256', public_path('images/Cabecera.png')) }}" alt="" aria-hidden="true">
+    <div class="report-letterhead-header-rule" aria-hidden="true"></div>
     <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
     <div class="table-responsive">
         <table class="table align-middle">
             <colgroup><col class="report-col-number"><col class="report-col-name"><col class="report-col-document"><col class="report-col-grade"><col class="report-col-role"><col class="report-col-money"><col class="report-col-money"><col class="report-col-money"></colgroup>
             <thead>
                 <tr class="report-print-heading"><th colspan="8"><h2>Listado de Inscritos</h2></th></tr>
-                <tr><th>N.º</th><th>Nombre completo</th><th>Documento</th><th>Grado</th><th>Cargo</th><th>Tarifa</th><th>Pagado</th><th>Saldo</th></tr>
+                <tr><th>N.º</th><th>Nombre completo</th><th>Documento</th><th>Grado</th><th>Cargo</th><th>Costo</th><th>Pagado</th><th>Saldo</th></tr>
             </thead>
             <tbody>
                 @forelse($inscripciones as $inscripcion)
@@ -24,7 +25,10 @@
                         <td>{{ $inscripcion->persona->nombre_completo }}</td>
                         <td>{{ $inscripcion->persona->documento_identidad }}</td>
                         <td>{{ $inscripcion->persona->grado->nombre }}</td>
-                        <td>{{ $inscripcion->cargo }}@if($inscripcion->observaciones)<small class="d-block">{{ $inscripcion->observaciones }}</small>@endif</td>
+                        <td>{{ $inscripcion->cargo }}@if($inscripcion->observaciones && !$inscripcion->invitado_sin_costo)<small class="d-block">{{ $inscripcion->observaciones }}</small>@endif</td>
+                        @if($inscripcion->invitado_sin_costo)
+                        <td colspan="3" class="text-center">Sin costo</td>
+                        @else
                         <td class="text-nowrap">Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</td>
                         <td class="text-nowrap">
                             @if($inscripcion->pagado_bs > 0 || !($inscripcion->pagado_usd > 0))
@@ -35,6 +39,7 @@
                             @endif
                         </td>
                         <td class="text-nowrap">Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</td>
+                        @endif
                     </tr>
                 @empty
                     <tr><td colspan="8">No hay personas inscritas.</td></tr>
@@ -63,7 +68,7 @@
             await letterhead.decode();
             window.print();
         } catch (error) {
-            window.showAppMessage('No se pudo cargar el membrete. Recarga la página antes de imprimir.');
+            window.showAppMessage('No se pudo cargar la cabecera. Recarga la página antes de imprimir.');
         } finally {
             button.disabled = false;
         }

@@ -14,7 +14,7 @@ class CredencialTest extends TestCase
     private function persona(string $documento = '1234567'): Persona
     {
         $grado = Grado::firstOrCreate(['nombre' => 'Dan']);
-        return Persona::create(['primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez', 'documento_identidad' => $documento, 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-01-01', 'telefono' => '70012345', 'grado_id' => $grado->id]);
+        return Persona::create(['primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez', 'documento_identidad' => $documento, 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado->id]);
     }
 
     private function inscripcion(Persona $persona, string $nombre = 'Seminario Internacional'): Inscripcion

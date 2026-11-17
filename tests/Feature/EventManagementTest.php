@@ -13,7 +13,7 @@ class EventManagementTest extends TestCase
 
     private function personaData(int $grado): array
     {
-        return ['primer_nombre' => 'Ana', 'segundo_nombre' => 'María', 'primer_apellido' => 'Pérez', 'segundo_apellido' => 'López', 'documento_identidad' => '1234567', 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-05-20', 'telefono' => '70012345', 'grado_id' => $grado];
+        return ['primer_nombre' => 'Ana', 'segundo_nombre' => 'María', 'primer_apellido' => 'Pérez', 'segundo_apellido' => 'López', 'documento_identidad' => '1234567', 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado];
     }
     private function eventoData(int $grado): array
     {
@@ -68,8 +68,6 @@ class EventManagementTest extends TestCase
         $this->post('/eventos', $data)->assertSessionHasErrors('fecha_final');
         $data = $this->eventoData($grado->id); $data['costos_usd'][$grado->id] = '-1';
         $this->post('/eventos', $data)->assertSessionHasErrors('costos_usd.'.$grado->id);
-        $data = $this->personaData($grado->id); $data['fecha_nacimiento'] = now()->addDay()->toDateString();
-        $this->post('/personas', $data)->assertSessionHasErrors('fecha_nacimiento');
         $this->assertDatabaseCount('eventos', 0);
     }
     public function test_free_tariff_is_valid_and_missing_tariff_is_rejected(): void
@@ -212,9 +210,9 @@ class EventManagementTest extends TestCase
         $this->assertTrue($inscripcion->invitado_sin_costo);
         $this->assertSame('0.00', $inscripcion->tarifa());
         $this->assertSame('invitado sin costo', $inscripcion->observaciones);
-        foreach (['/inscripciones?evento_id='.$evento->id, '/inscripciones/imprimir'] as $url) {
-            $this->get($url)->assertOk()->assertSee('invitado sin costo')->assertSee('Bs 0,00');
-        }
+        $this->get('/inscripciones?evento_id='.$evento->id)->assertOk()->assertSee('invitado sin costo')->assertSee('Bs 0,00');
+        $this->get('/inscripciones/imprimir')->assertOk()->assertSee('<td colspan="3" class="text-center">Sin costo</td>', false)
+            ->assertDontSee('invitado sin costo')->assertDontSee('Bs 0,00');
         $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('invitado sin costo');
         $this->get(route('inscripciones.pagos.create', $inscripcion))->assertOk()
             ->assertViewHas('tarifa', '0.00')->assertViewHas('saldoPendiente', '0.00')

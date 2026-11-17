@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grado = document.getElementById('grado_id');
     const foto = document.getElementById('foto');
     const preview = document.getElementById('foto-preview');
-    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono', 'grado_id', 'pais_id', 'organizacion'];
+    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id', 'organizacion'];
     function cargarPersona() {
         const opcion = opcionesPersonas.find(opcion => String(opcion.id) === persona.value);
         datos.forEach(campo => { document.getElementById(campo).value = opcion?.datos[campo] ?? ''; });
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         foto.setCustomValidity('');
         document.getElementById('foto-client-error').hidden = true;
         foto.required = !opcion;
-        preview.src = opcion?.foto_url || '{{ asset('images/persona-default.svg') }}';
+        preview.src = opcion?.foto_url || '{{ asset('images/default.jpg') }}';
         preview.dataset.original = preview.src;
         actualizarTarifa();
     }

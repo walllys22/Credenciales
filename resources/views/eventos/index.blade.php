@@ -18,16 +18,16 @@
     </form>
     <div class="table-responsive">
         <table class="table align-middle event-table">
-            <thead><tr><th scope="col">Evento</th><th scope="col">Ciudad</th><th scope="col">Fechas</th><th scope="col">Costo por grado</th><th scope="col" class="text-center">Acciones</th></tr></thead>
+            <thead><tr><th scope="col">Evento</th><th scope="col">Ciudad</th><th scope="col">Fechas</th><th scope="col">Costo por categoría</th><th scope="col" class="text-center">Acciones</th></tr></thead>
             <tbody>
             @forelse($eventos as $evento)
                 <tr>
                     <td><div class="event-name"><img class="event-thumbnail" src="{{ $evento->imagen_url }}" alt="Imagen de {{ $evento->nombre }}" width="58" height="74" loading="lazy"><strong>{{ $evento->nombre }}</strong></div></td>
                     <td>{{ $evento->ciudad }}<small class="d-block">{{ $evento->lugar }}</small></td>
-                    <td class="dates-cell">{{ $evento->fecha_inicio->format('d/m/Y') }}<br>al {{ $evento->fecha_final->format('d/m/Y') }}<small class="d-block">{{ $evento->fecha_final->isBefore(today()) ? 'Finalizado' : ($evento->fecha_inicio->isAfter(today()) ? 'Próximo' : 'En curso') }}</small></td>
+                    <td class="dates-cell">{{ $evento->fecha_inicio->format('d/m/Y') }}<br>al {{ $evento->fecha_final->format('d/m/Y') }}</td>
                     <td class="tariff-cell">
-                        @foreach($evento->grados as $grado)
-                            <div><small>{{ $grado->nombre }}:</small> {{ $grado->pivot->costo_usd !== null ? '$us '.number_format((float) $grado->pivot->costo_usd, 2, ',', '.') : 'Sin registrar en $us' }}</div>
+                        @foreach($evento->costos_agrupados as $costo)
+                            <div><small>{{ $costo['nombre'] }}:</small> {{ $costo['usd'] !== null ? '$us '.number_format((float) $costo['usd'], 2, ',', '.') : 'Sin registrar en $us' }}</div>
                         @endforeach
                         <small class="d-block mt-1">Tipo de cambio: {{ $evento->tipo_cambio !== null ? 'Bs '.number_format((float) $evento->tipo_cambio, 2, ',', '.').' por 1 $us' : 'Sin registrar' }}</small>
                         <small class="d-block mt-1">{{ $evento->inscripciones_count }} inscripciones</small>
@@ -71,13 +71,13 @@
                     <div><dt>Ciudad</dt><dd>{{ $evento->ciudad }}</dd></div>
                     <div class="event-compact-exchange"><dt>Tipo de cambio</dt><dd>{{ $evento->tipo_cambio !== null ? 'Bs.- '.number_format((float) $evento->tipo_cambio, 2, ',', '.').' por 1 $us' : 'Sin registrar' }}</dd></div>
                 </dl>
-                <h3 class="h6 event-compact-cost-title">Costo por grado</h3>
+                <h3 class="h6 event-compact-cost-title">Costo por categoría</h3>
                 <div class="overflow-auto">
                     <table class="table table-bordered align-middle">
-                        <thead><tr><th scope="col">Grado</th><th scope="col" class="text-end">Costo $us</th><th scope="col" class="text-end">Costo Bs.-</th></tr></thead>
+                        <thead><tr><th scope="col">Categoría</th><th scope="col" class="text-end">Costo $us</th><th scope="col" class="text-end">Costo Bs.-</th></tr></thead>
                         <tbody>
-                            @forelse($evento->grados as $grado)
-                                <tr><td>{{ $grado->nombre }}</td><td class="text-end">{{ $grado->pivot->costo_usd !== null ? '$us '.number_format((float) $grado->pivot->costo_usd, 2, ',', '.') : 'Sin registrar' }}</td><td class="text-end"><strong>Bs.- {{ number_format((float) $grado->pivot->costo, 2, ',', '.') }}</strong></td></tr>
+                            @forelse($evento->costos_agrupados as $costo)
+                                <tr><td>{{ $costo['nombre'] }}</td><td class="text-end">{{ $costo['usd'] !== null ? '$us '.number_format((float) $costo['usd'], 2, ',', '.') : 'Sin registrar' }}</td><td class="text-end"><strong>{{ $costo['bs'] !== null ? 'Bs.- '.number_format((float) $costo['bs'], 2, ',', '.') : 'Sin registrar' }}</strong></td></tr>
                             @empty
                                 <tr><td colspan="3" class="text-center text-secondary">No hay tarifas configuradas.</td></tr>
                             @endforelse

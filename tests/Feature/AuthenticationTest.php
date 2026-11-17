@@ -25,7 +25,7 @@ class AuthenticationTest extends TestCase
     private function registration(): Inscripcion
     {
         $grado = Grado::create(['nombre' => 'Dan']);
-        $persona = Persona::create(['primer_nombre' => 'Ana', 'primer_apellido' => 'Perez', 'documento_identidad' => '123', 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-01-01', 'telefono' => '70012345', 'grado_id' => $grado->id]);
+        $persona = Persona::create(['primer_nombre' => 'Ana', 'primer_apellido' => 'Perez', 'documento_identidad' => '123', 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado->id]);
         $evento = Evento::create(['nombre' => 'Seminario', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
 
         return Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante']);

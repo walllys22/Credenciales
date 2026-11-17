@@ -3,7 +3,8 @@
 <div class="col-12 mb-4">
     <label for="foto" class="form-label">Foto de la persona @if(!$persona->exists)<span class="required">*</span>@endif</label>
     <div class="person-photo-upload">
-        <img id="foto-preview" src="{{ $persona->foto_url }}" alt="Vista previa de la foto" width="130" height="150" data-original="{{ $persona->foto_url }}">
+        @php($fotoInicial = $persona->exists ? $persona->foto_url : asset('images/default.jpg'))
+        <img id="foto-preview" src="{{ $fotoInicial }}" alt="Vista previa de la foto" width="130" height="150" data-original="{{ $fotoInicial }}">
         <div class="flex-grow-1">
             <input type="file" id="foto" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/jpeg,image/png,image/webp,image/gif" @required(!$persona->exists) aria-describedby="foto-help" @error('foto') aria-invalid="true" @enderror>
             @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -18,12 +19,11 @@
 <x-field class="col-md-6" name="segundo_apellido" label="Segundo apellido" :value="$persona->segundo_apellido" maxlength="100"/>
 <x-field class="col-md-6" name="documento_identidad" label="Documento de identidad" :value="$persona->documento_identidad" maxlength="50"/>
 <div class="col-md-6 mb-3"><label for="sexo" class="form-label">Sexo <span class="required">*</span></label><select id="sexo" name="sexo" class="form-select @error('sexo') is-invalid @enderror" required><option value="">Seleccionar</option>@foreach(['Masculino', 'Femenino', 'Otro'] as $sexo)<option @selected(old('sexo', $persona->sexo) === $sexo)>{{ $sexo }}</option>@endforeach</select>@error('sexo')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-<x-field class="col-md-6" name="fecha_nacimiento" label="Fecha de nacimiento" type="date" :value="$persona->fecha_nacimiento?->format('Y-m-d')" :max="now()->format('Y-m-d')"/>
 <x-field class="col-md-6" name="telefono" label="Teléfono" type="tel" :value="$persona->telefono" maxlength="30"/>
 </div>
 <div class="row align-items-center mt-4">
 <div class="col-md-6"><div class="form-section-heading"><span class="step-number">02</span><div><h2>Grado del participante</h2><p>El grado determina la tarifa en cada evento.</p></div></div></div>
-<div class="col-md-6"><label class="form-label" for="grado_id">Grado <span class="required">*</span></label><select name="grado_id" id="grado_id" class="form-select @error('grado_id') is-invalid @enderror" required><option value="">Seleccionar grado</option>@foreach($grados as $grado)<option value="{{ $grado->id }}" @selected(old('grado_id', $persona->grado_id) == $grado->id)>{{ $grado->nombre }}</option>@endforeach</select>@error('grado_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+<div class="col-md-6"><label class="form-label" for="grado_id">Grado <span class="required">*</span></label><select name="grado_id" id="grado_id" class="form-select @error('grado_id') is-invalid @enderror" required><option value="">Seleccionar grado</option>@foreach($grados->groupBy(fn ($grado) => $grado->categoria() ?? 'Otros') as $categoria => $grupo)<optgroup label="{{ $categoria }}">@foreach($grupo as $grado)<option value="{{ $grado->id }}" @selected(old('grado_id', $persona->grado_id) == $grado->id)>{{ $grado->nombre }}</option>@endforeach</optgroup>@endforeach</select>@error('grado_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
 <p class="form-text mt-2">¿Necesitas otro grado? <a href="{{ route('grados.index') }}">Gestionar grados</a></p>
 @if($persona->exists && !$persona->grado_id)<p class="form-text">Grado anterior: {{ $persona->grado->nombre }}. Selecciona su grado numerado para guardar los cambios.</p>@endif
 </div>

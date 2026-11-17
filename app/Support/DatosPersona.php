@@ -16,7 +16,7 @@ class DatosPersona
             'primer_apellido' => 'required|string|max:100', 'segundo_apellido' => 'nullable|string|max:100',
             'documento_identidad' => ['nullable', 'string', 'max:50', Rule::unique('personas')->ignore($persona)],
             'sexo' => ['required', Rule::in(['Masculino', 'Femenino', 'Otro'])],
-            'fecha_nacimiento' => 'nullable|date|before_or_equal:today', 'telefono' => 'nullable|string|max:30',
+            'telefono' => 'nullable|string|max:30',
             'grado_id' => ['required', $request->boolean('registro_integrado') ? Rule::exists('grados', 'id')->whereIn('nombre', Grado::DETALLADOS) : 'exists:grados,id'],
             'pais_id' => 'sometimes|nullable|exists:paises,id',
             'organizacion' => 'sometimes|nullable|string|max:255',

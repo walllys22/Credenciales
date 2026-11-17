@@ -3,6 +3,9 @@
 @section('section', 'Inscripción')
 @section('title', 'Inscripciones')
 @section('subtitle', 'Participantes, fotos e inscripciones en un solo lugar.')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/inscripciones-listado.css') }}?v={{ filemtime(public_path('css/inscripciones-listado.css')) }}">
+@endpush
 @section('actions')
     @if(auth()->user()->isSuperAdmin())
     {{-- Abre el listado completo de inscritos; botón verde a la izquierda de Nueva inscripción. --}}
@@ -11,10 +14,10 @@
     @endif
 @endsection
 @section('content')
-<section class="panel">
-<form class="row g-3 mb-4" method="GET" role="search" id="filtro-inscripciones">
+<section class="panel registrations-index">
+<form class="row g-3" method="GET" role="search" id="filtro-inscripciones">
     <div class="col-md-6">
-        <label for="evento_id" class="form-label">Evento</label>
+        <label for="evento_id" class="form-label ms-3">Evento</label>
         <select id="evento_id" name="evento_id" class="form-select">
             <option value="">Seleccione un evento</option>
             @foreach($eventos as $evento)<option value="{{ $evento->id }}" @selected(request('evento_id') == $evento->id)>{{ $evento->nombre }}</option>@endforeach
@@ -30,7 +33,6 @@
 <div class="panel-toolbar">
     <div>
         <h2 class="d-flex flex-wrap align-items-baseline gap-2">Participantes inscritos @if($eventoElegido)<span class="text-secondary">· {{ $eventoElegido->nombre }}</span>@endif</h2>
-        <p>{{ $inscripciones->total() }} resultados @if(auth()->user()->isSuperAdmin()) · Tarifas vigentes por grado @endif</p>
     </div>
 </div>
 <div class="table-responsive">
@@ -53,7 +55,7 @@
         <div class="person-cell">@include('personas.photo', ['persona' => $inscripcion->persona])<div>
             <strong>{{ $inscripcion->persona->nombre_completo }}</strong>
             <small>#{{ str_pad($inscripcion->persona->id, 4, '0', STR_PAD_LEFT) }} · {{ $inscripcion->persona->sexo }} - {{ $inscripcion->persona->documento_identidad ?: '—' }}</small>
-            <small class="d-flex flex-wrap gap-2 text-secondary"><span>{{ $inscripcion->cargo }}</span><span>{{ $inscripcion->persona->pais?->nombre ?? 'País sin registrar' }}</span></small>
+            <small class="text-secondary"><span>{{ $inscripcion->cargo }}</span> - <span class="d-inline-flex align-items-center gap-1"><span>{{ $inscripcion->persona->pais?->nombre ?? 'País sin registrar' }}</span>@if($inscripcion->persona->pais?->bandera_url)<img src="{{ $inscripcion->persona->pais->bandera_url }}" alt="" aria-hidden="true" width="21" height="14" style="object-fit:contain">@endif</span></small>
             @if($inscripcion->observaciones)<small class="d-block text-secondary">{{ $inscripcion->observaciones }}</small>@endif
         </div></div>
     </td>
@@ -65,7 +67,7 @@
     @if(auth()->user()->isSuperAdmin())
     <td class="text-nowrap">
         <div>Costo: <strong>Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</strong></div>
-        <div>Pagado: <strong>Bs {{ number_format($inscripcion->total_pagado, 2, ',', '.') }}</strong></div>
+        <div>Pagado: <strong>@include('inscripciones.importe-pagado')</strong></div>
         <div>Saldo: <strong>Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</strong></div>
     </td>
     @endif

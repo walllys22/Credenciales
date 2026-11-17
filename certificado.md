@@ -52,7 +52,7 @@ y el historial con las verificaciones realmente ejecutadas.
 El seeder usa firstOrCreate por username: repetirlo no reinicia contraseñas,
 roles ni estado de cuentas existentes. Si una cuenta inicial conserva su correo
 @credencial.local, el seeder lo actualiza a @credencial.com sin tocar su hash. DatabaseSeeder también lo invoca y
-mantiene la creación del grado Sin grado. Para cambiar una contraseña existente,
+carga los 18 grados numerados de la lista solicitada. Para cambiar una contraseña existente,
 usar Usuarios; el campo vacío al editar conserva el hash actual.
 
 ### Permisos y navegación
@@ -157,13 +157,281 @@ la ubicación de espacios reservados, revisar impresión y alineación antes de 
 
 ## Costos por grado
 
+### 17/11/2026: separación visible de Kyu y Dan en el catálogo
+
+El listado /grados muestra encabezados de grupo: Grados Kyu primero, seguido
+por Grados Dan. Los números Kyu se ordenan de mayor a menor y los Dan de menor
+a mayor. El orden numérico sustituye al orden por lista fija para ubicar
+correctamente grados agregados después, como 8vo Kyu. Se mantienen búsqueda,
+paginación y acciones de cada grado. No se modificaron registros ni tarifas.
+Archivos: app/Models/Grado.php, resources/views/grados/index.blade.php y
+certificado.md.
+Verificaciones de este ajuste: **5 pruebas aprobadas / 131 aserciones** de
+catálogo y gestión de grados; compilación/limpieza Blade y git diff --check
+correctos. Consulta de sólo lectura en MySQL operativa confirmó los 19 grados:
+10mo a 1er Kyu, incluyendo 8vo Kyu, seguidos por 1er a 10mo Dan, con los
+números disponibles. El intento inicial con Tinker no se ejecutó por la ruta
+de historial fuera del espacio permitido; se verificó con un script PHP local.
+Sin inspección visual interactiva ni nueva suite completa por ser un ajuste
+de orden y encabezados de grupos.
+
+### Ajuste del 17/11/2026: orden y grupos del selector de grados
+
+Primero se muestran los Kyu, de 10mo a 1er, y luego los Dan, de 1er a 10mo,
+conservando únicamente los grados existentes en la lista del usuario. El
+selector utiliza grupos separados Kyu y Dan. El orden también se comparte con
+el catálogo y los formularios de eventos, sin depender del ID ni del orden
+alfabético y sin modificar asignaciones ni tarifas.
+El catálogo separa las filas con encabezados «Grados Kyu» y «Grados Dan».
+La ordenación usa la categoría y el número del nombre, de modo que un grado
+numerado agregado después también se ubica dentro de su grupo en el lugar
+correspondiente, sin depender de la lista inicial de nombres.
+
+Archivos: app/Models/Grado.php, controladores GradoController,
+PersonaController, InscripcionController y EventoController,
+resources/views/personas/datos.blade.php y certificado.md.
+Verificación nueva: **14 pruebas aprobadas / 246 aserciones** de catálogo,
+gestión de grados e inscripción integrada. Compilación y limpieza Blade
+correctas; git diff --check sin errores. Sin revisión visual interactiva;
+no se repitió la suite completa por ser un ajuste de orden y presentación.
+
+El pie del reporte de inscritos usa texto HTML a **12 pt** en ambas líneas
+(nombre del seminario y BOLIVIA 2026), en pantalla e impresión. La cabecera usa
+public/images/Cabecera.png; el pie se compone con texto HTML y líneas negra
+y roja. Los archivos gráficos originales no se modifican. El pie se
+repite con posición fija al imprimir y conserva la reserva inferior del reporte.
+Las líneas roja superior y negra/roja del pie tienen el mismo ancho y los
+mismos extremos que la tabla. En pantalla usan los márgenes interiores de
+10 mm del reporte; al imprimir ocupan los 195,9 mm útiles del papel Carta.
+Cabecera.png ocupa una caja de 38 mm de alto, conserva su proporción mediante
+object-fit:contain y se repite al imprimir. La URL usa un hash SHA-256 para
+reflejar cambios del archivo. La línea roja inferior se conserva por CSS.
+El título Listado de Inscritos tiene padding superior de 2 mm para separarlo
+de la línea roja, tanto en pantalla como en impresión.
+
 `Evento` relaciona grados con pivot costo (Bs) y costo_usd; tipo_cambio pertenece
 al evento. El formulario captura dólares y calcula bolivianos con BigDecimal.
-El listado de eventos muestra montos en $us y el tipo de cambio debajo.
+El listado de eventos y su modal agrupan los costos por categoría: Kyu $us 30,
+Dan $us 50 y Jefes de Dojo $us 100, sin repetir los grados numerados.
+Se conserva el tipo de cambio debajo y, en el modal, el importe en Bs.
+La columna Fechas del listado muestra únicamente inicio y final del evento;
+se retiró la etiqueta de estado debajo de las fechas. El filtro Estado
+permanece disponible para próximos, en curso y finalizados.
+Evento::costos_agrupados reúne precios iguales por categoría sin modificar
+los pivotes; los costos personalizados anteriores o distintos se conservan
+identificados para no ocultar diferencias. La fila de Jefes de Dojo calcula
+Bs con el tipo de cambio del evento y marca Sin registrar si falta.
+El catálogo inicial solicitado contenía: 10mo Kyu, 9no Kyu, 7mo Kyu,
+6to Kyu, 5to Kyu, 4to Kyu, 3er Kyu, 2do Kyu, 1er Kyu, 1er Dan, 2do Dan,
+3er Dan, 4to Dan, 5to Dan, 7mo Dan, 8vo Dan, 9no Dan y 10mo Dan.
+Esa imagen no incluía 8vo Kyu ni 6to Dan. En la última consulta operativa el
+catálogo contiene 19 registros porque se agregó 8vo Kyu posteriormente.
+El catálogo muestra los registros en una página, primero Kyu de mayor a menor y después Dan de menor
+a mayor. El orden se aplica mediante Grado::ordenados() al catálogo y los
+formularios de participantes, inscripciones y eventos. El selector del
+participante separa visualmente ambas categorías con los grupos Kyu y Dan.
+Las categorías tarifarias se deducen del nombre: Kyu cuesta $us 30 y Dan
+$us 50, multiplicados por el tipo de cambio del evento. El formulario de
+eventos muestra esos precios de sólo lectura y el servidor fija los mismos
+valores aun si se manipula el envío. Jefe de Dojo es una opción separada de
+la inscripción: sólo Dan **y** Jefe de Dojo paga $us 100; Kyu con jefatura
+conserva $us 30. Invitado sin costo tiene prioridad y paga cero.
+Los precios anteriores de grados personalizados siguen disponibles como
+compatibilidad técnica; el formulario integrado exige un grado de la lista.
+El certificado reconoce los Dan numerados para el prefijo Sensei.
+La migración 2026_11_17_000004 permite personas.grado_id nulo y conserva el
+nombre general en grado_anterior. CatalogoGrados reemplaza los grados generales
+y sus pivotes por los 18 numerados y sus tarifas. No asigna números arbitrarios
+a las personas anteriores: se muestran Dan/Kyu hasta editar y elegir un grado
+numerado. Se permite concretar o cambiar el número dentro de la misma categoría;
+se mantiene el bloqueo de cambio de categoría cuando hay inscripciones.
+Las fotos, datos personales restantes, inscripciones y pagos se conservan.
+Los eventos anteriores sin tipo de cambio requieren configurarlo antes de
+cobrar con las tarifas en dólares; no se inventa una cotización.
 Importes y tipo de cambio no registrados se señalan explícitamente; no se
 deduce una cotización de mercado ni se reconvierten datos históricos por suposición.
 
 ## Registro y listado unificados (17/11/2026)
+
+### 17/11/2026: columna Fechas sin etiqueta de estado
+
+Se retiró el texto Próximo y la línea de estado de la columna Fechas en Eventos.
+La celda muestra sólo las fechas inicial y final; el filtro Estado mantiene
+su funcionamiento. Archivos: resources/views/eventos/index.blade.php y
+certificado.md. Verificaciones nuevas: **4 pruebas aprobadas / 51 aserciones**
+de eventos, incluido filtro por estado y paginación; compilación/limpieza Blade
+y git diff --check correctos. Sin revisión visual interactiva ni nueva suite
+completa por ser una eliminación de texto de presentación.
+
+### 17/11/2026: Cabecera.png en el reporte
+
+Se sustituyó Membrete.png por public/images/Cabecera.png como imagen superior
+del reporte. Se muestra completa y sin deformar dentro de 38 mm de altura;
+se conserva la línea roja inferior al mismo ancho de la tabla y la separación
+del título. La cabecera se repite con posición fija al imprimir. Se mantiene
+la espera de carga de la imagen antes de imprimir y la URL incluye hash.
+Archivos: resources/views/inscripciones/imprimir.blade.php,
+public/css/inscripciones-imprimir.css y certificado.md.
+Verificaciones nuevas: imagen local presente e inspeccionada; **3 pruebas
+del reporte aprobadas / 36 aserciones**. Compilación y limpieza Blade correctas;
+git diff --check sin errores. Sin revisión visual interactiva del reporte ni
+impresión física; no se repitió la suite completa por ser un cambio de imagen.
+
+### 17/11/2026: vista de inscripciones compacta
+
+Se subieron los controles y la tabla reduciendo la altura de la barra superior,
+el encabezado de página, los márgenes superiores y los espacios del panel.
+Se retiró la línea de resultados y tarifas mostrada debajo de Participantes
+inscritos. Se conservan el título, evento elegido, filtros, acciones y
+paginación. Los estilos sólo se cargan en /inscripciones.
+Archivos: resources/views/inscripciones/index.blade.php,
+public/css/inscripciones-listado.css y certificado.md.
+Verificaciones nuevas: **24 pruebas aprobadas / 285 aserciones** de gestión
+e inscripción integrada; compilación y limpieza Blade correctas;
+git diff --check sin errores. Sin inspección visual interactiva ni suite
+completa adicional por ser cambios de distribución y una línea de texto.
+
+### 17/11/2026: líneas del membrete al ancho de tabla y separación del título
+
+Las líneas del encabezado y del pie del reporte se alinean con los extremos
+de la tabla. La línea roja superior se dibuja por CSS y las líneas del pie
+se ampliaron al ancho completo del contenido. Se conserva el archivo original
+Membrete.png y sus logos. Listado de Inscritos incorpora 2 mm de padding
+superior para separarse de la línea roja; se aplica en pantalla e impresión.
+Archivos: public/css/inscripciones-imprimir.css,
+resources/views/inscripciones/imprimir.blade.php y certificado.md.
+Verificaciones nuevas: **3 pruebas del reporte aprobadas / 36 aserciones**
+tras alinear las líneas. Después del padding, compilación y limpieza Blade
+correctas y git diff --check sin errores. No se añadieron pruebas de estilo
+ni se repitió la suite completa por ser cambios reversibles de presentación.
+Sin inspección visual interactiva ni impresión física en esta tarea.
+
+### 17/11/2026: costos agrupados del evento y posición de la etiqueta Evento
+
+El listado de eventos y el modal Ver evento muestran los costos agrupados por
+categoría, sin repetir los grados numerados. Se comprobó en la base operativa:
+Kyu $us 30 (Bs 351), Dan $us 50 (Bs 585) y Jefes de Dojo $us 100 (Bs 1170),
+con el tipo de cambio vigente 11,70. El modal conserva los importes en Bs y
+el listado conserva tipo de cambio y cantidad de inscripciones. Los precios
+de pivotes e importes de pagos no se modificaron. En el filtro de Inscripciones,
+la etiqueta Evento tiene un margen izquierdo de 1 rem (16 px) para desplazar
+el texto hacia la derecha; el selector conserva su posición y ancho.
+Archivos: app/Models/Evento.php, resources/views/eventos/index.blade.php,
+resources/views/inscripciones/index.blade.php y certificado.md.
+Verificaciones nuevas: **23 pruebas aprobadas / 256 aserciones** de eventos,
+monedas y gestión de inscripciones para la agrupación. Consulta de sólo
+lectura confirma exactamente tres categorías en el evento operativo.
+Compilación/limpieza Blade y git diff --check correctos tras el ajuste de
+etiqueta. Sin inspección visual interactiva ni nuevas pruebas para el margen,
+por ser un cambio reversible de presentación.
+
+### 17/11/2026: cabecera del reporte y celda Sin costo
+
+El texto de los encabezados de las ocho columnas del reporte aumenta un 30 %,
+de 6,5 pt a 8,45 pt, tanto en pantalla como al imprimir. No se amplió el
+membrete ni el título Listado de Inscritos. Los invitados sin costo conservan
+su cargo y muestran «Sin costo» centrado en una celda que ocupa las tres
+columnas de importes; se omite la observación automática debajo del cargo.
+No se modificaron cobros, registros ni totales del reporte.
+Archivos: public/css/inscripciones-imprimir.css,
+resources/views/inscripciones/imprimir.blade.php,
+tests/Feature/EventManagementTest.php y certificado.md.
+Verificaciones nuevas: **18 pruebas aprobadas / 204 aserciones**, incluyendo
+la celda combinada del invitado, reporte y reglas de cobro. Compilación y
+limpieza Blade correctas; git diff --check sin errores. Sin revisión visual
+interactiva ni impresión física; no se repitió la suite completa por ser
+un ajuste de presentación del reporte.
+
+### 17/11/2026: encabezado Costo en el reporte de inscritos
+
+En /inscripciones/imprimir el encabezado de la columna se cambió de Tarifa
+a Costo, tanto en pantalla como en impresión. Se conservan importes y cálculos.
+Archivos: resources/views/inscripciones/imprimir.blade.php,
+tests/Feature/InscripcionesImprimirTest.php y certificado.md.
+Verificaciones nuevas tras el cambio: **3 pruebas aprobadas / 36 aserciones**
+del reporte; compilación/limpieza Blade y git diff --check correctos.
+Sin revisión visual interactiva ni suite completa adicional por ser un texto.
+
+Verificación final adicional de la retirada de nacimiento: **9 pruebas
+JavaScript aprobadas**, sin referencias al campo en app, resources y public/js;
+compilación/limpieza Blade correctas. Las referencias de migraciones históricas,
+la migración de eliminación y las comprobaciones de ausencia en pruebas son
+intencionales. Los respaldos históricos no forman parte del esquema activo.
+
+### 17/11/2026: eliminación de la fecha de nacimiento
+
+El proyecto ya no captura, valida, carga ni muestra fecha de nacimiento.
+Se retiró de los datos personales, modal del participante, carga JavaScript,
+modelo Persona y validación DatosPersona. Las pruebas y sus datos de ejemplo
+se adaptaron; teléfono conserva su validación y carácter opcional.
+La migración 2026_11_17_000005 elimina la columna de personas y se aplicó en
+la base operativa. Se conservaron las migraciones históricas para que una
+instalación desde cero o una actualización existente siga siendo reproducible.
+La reversión sólo repone una columna vacía, no recupera fechas eliminadas.
+
+Archivos principales: app/Models/Persona.php, app/Support/DatosPersona.php,
+app/Http/Controllers/InscripcionController.php, vistas personas/datos e
+inscripciones/form y detalle; migración 000005; pruebas PHP de participantes,
+inscripciones, pagos, credenciales, certificados, acceso y reporte; pruebas
+JavaScript de inscripción y certificado.md.
+
+Verificaciones nuevas: **30 pruebas dirigidas aprobadas / 357 aserciones**.
+Suite PHP completa: **84 aprobadas, 2 fallidas / 1018 aserciones**; persisten
+las dos expectativas de logos anteriores en AuthenticationTest (Logo.png en
+login) y CredencialMovilTest (icono.png en favicon). Se comprobó la ausencia
+de la columna y el campo en el formulario y modal. Comparación SHA-256 antes
+y después de la migración confirma los otros atributos de las **16 personas**,
+las **16 inscripciones** y los **20 pagos** idénticos. No se borraron personas,
+inscripciones ni pagos. Sin inspección visual interactiva.
+
+### 17/11/2026: foto inicial de Nueva inscripción
+
+La vista previa del formulario nuevo usa public/images/default.jpg en lugar
+de persona-default.svg, tanto en src como en data-original. El cambio de
+contexto a participante nuevo también restaura default.jpg. Al elegir una
+foto se sigue mostrando el archivo elegido; al editar se conserva la foto
+existente. No se modificó el archivo gráfico ni los datos de participantes.
+Archivos: resources/views/personas/datos.blade.php,
+resources/views/inscripciones/form.blade.php,
+tests/JavaScript/inscripciones-invitado.test.cjs y certificado.md.
+Verificaciones nuevas: default.jpg presente; **9 pruebas PHP aprobadas / 115
+aserciones** de inscripción integrada y **4 pruebas JavaScript aprobadas**.
+Compilación/limpieza Blade y git diff --check correctos. Sin revisión visual
+interactiva ni nueva suite completa por ser una sustitución de vista previa.
+La foto sigue siendo obligatoria para registrar un participante nuevo.
+
+### 17/11/2026: pagos visibles en la moneda recibida
+
+Pagado, en el listado de inscripciones y el modal del participante, muestra
+los importes originales agrupados por moneda. Ejemplos: Bs 100,00; $us 20,00;
+o Bs 100,00 + $us 20,00 cuando hay pagos mixtos. Sin pagos muestra Bs 0,00.
+Se suman monto para BOB y monto_original para USD mediante agregados SQL,
+sin consultas por fila. Costo, descuento y saldo permanecen en Bs; el saldo
+interno conserva la conversión histórica de cada pago y sus descuentos.
+El reporte impreso ya separaba ambas monedas y mantiene ese comportamiento.
+No se alteraron pagos, tipos de cambio ni datos operativos.
+Archivos: app/Http/Controllers/InscripcionController.php,
+resources/views/inscripciones/index.blade.php, detalle.blade.php e
+importe-pagado.blade.php; tests/Feature/PagoTest.php y certificado.md.
+Verificaciones nuevas: **25 pruebas aprobadas / 316 aserciones** de pagos,
+reporte e inscripción integrada. El caso nuevo comprueba pagos sólo USD,
+pagos mixtos, ausencia de pagos, importes originales y saldo con descuento.
+Compilación/limpieza Blade y git diff --check correctos. Sin inspección visual
+interactiva ni repetición de la suite completa; sin cambios de cobro.
+
+### 17/11/2026: separador y bandera en la fila del participante
+
+La tercera línea de Participante ahora muestra «Participante - Bolivia» y,
+a continuación, su bandera pequeña de 21 × 14 px. Usa el cargo y país reales
+de cada fila. El espacio-guion-espacio separa el cargo del país, y el nombre
+del país permanece alineado con su bandera. Se conserva la distribución de
+foto y datos personales y se reutiliza Pais::bandera_url. Si no hay una
+bandera local configurada, sólo se muestra el país.
+Archivos: resources/views/inscripciones/index.blade.php y certificado.md.
+Verificación nueva: InscripcionIntegradaTest, **9 pruebas aprobadas / 115
+aserciones**; compilación y limpieza Blade correctas; git diff --check sin
+errores. Sin nueva prueba visual interactiva ni suite completa por ser un
+ajuste reversible de presentación. No se modificaron datos ni tarifas.
 
 La navegación principal y el dashboard usan Inscripciones como entrada para
 participantes. Se retiró el enlace independiente Persona. Nueva inscripción y
@@ -171,6 +439,8 @@ Editar inscripción incluyen datos personales, foto, grado, evento, cargo,
 Jefe de Dojo e Invitado sin costo en un único formulario multipart.
 La sección de grado dispone el encabezado a la izquierda y el selector con
 el enlace Gestionar grados a la derecha; en pantallas pequeñas se apilan.
+Cuando el participante conserva un grado general anterior, se informa el
+nombre previo y se exige elegir el grado numerado al guardar la edición.
 Debajo de esa sección aparece Organización del participante: texto opcional de
 hasta 255 caracteres, guardado en personas.organizacion y compartido por las
 inscripciones de la persona. Se conserva al editar/cargar el participante y se
@@ -189,6 +459,10 @@ Nueva inscripción comienza directamente en Datos personales: se retiraron el
 selector Cargar participante existente y su texto de ayuda. El identificador
 persona_id permanece oculto para edición y compatibilidad con enlaces que
 carguen un participante existente; sin ese contexto, el alta crea uno nuevo.
+Al abrir Nueva inscripción, la vista previa inicial usa public/images/default.jpg.
+La misma imagen se restaura al limpiar la selección del archivo o volver a
+un participante nuevo. Es una imagen de vista previa; no se guarda como foto
+del participante. Las personas existentes conservan su foto al editar.
 La foto es obligatoria para participantes nuevos; al editar o reutilizar se
 conserva si no se envía otra. Los datos personales y la foto son compartidos
 por las inscripciones de la misma persona; el formulario de edición lo indica.
@@ -204,14 +478,26 @@ imágenes conservan sus relaciones e identificadores. Las rutas antiguas de
 Persona y los envíos anteriores con persona_id siguen disponibles para
 compatibilidad; no son el recorrido de la navegación principal.
 
+El listado usa una distribución compacta propia: barra superior de 64 px,
+6 px sobre el encabezado de página, encabezado de 54 px y 8 px antes del
+panel; se reducen los espacios entre filtros, título y tabla. Se eliminó
+la línea «N resultados · Tarifas vigentes por grado» por solicitud del usuario.
+La paginación y los filtros se conservan. Estos estilos sólo se cargan en
+el listado, mediante public/css/inscripciones-listado.css.
 El listado único reúne foto ampliable, nombre, sexo, documento, grado, teléfono,
 cargo, país y observaciones junto a la foto. En Participante, el nombre va en la
 primera línea; debajo, código y sexo seguidos de guion y documento; en la tercera
-línea, cargo y país uno junto al otro. La columna Organización / Grado muestra
+línea, cargo, espacio-guion-espacio, país y una bandera pequeña a su derecha
+(21 × 14 px, sin deformar). El país y su bandera se alinean como un bloque
+en línea junto al cargo. Se reutilizan las banderas locales disponibles; si
+el país no tiene bandera configurada, se conserva su nombre sin imagen rota.
+La columna Organización / Grado muestra
 la organización de la persona arriba y su etiqueta de grado debajo; si no tiene
 organización, indica Sin organización registrada. El documento no se duplica.
 Los importes se agrupan
-en una única columna Costo / Pagado / Saldo, en tres líneas etiquetadas. La tabla no muestra una columna Evento;
+en una única columna Costo / Pagado / Saldo, en tres líneas etiquetadas.
+Pagado muestra Bs y/o $us según las monedas recibidas, separados por « + »
+cuando hay pagos mixtos. Costo y Saldo permanecen en Bs. La tabla no muestra una columna Evento;
 el evento se elige en el filtro superior y su nombre aparece a la derecha de
 «Participantes inscritos». Sin un evento válido seleccionado, se muestra sólo
 el título. Los nombres largos pueden pasar a otra línea. Superadmin conserva tarifa, pagado,
@@ -233,7 +519,7 @@ Las etiquetas de grados distinguen Dan (violeta) y Kyu (naranja), conservando
 el nombre como identificación; se aplica en los listados unificado y antiguo.
 En Acciones, superadmin dispone de Ver participante (ojo, color de la función
 Ver). Abre un modal Bootstrap de sólo lectura con foto, país, código, nombres,
-apellidos, documento, sexo, nacimiento, teléfono, grado y organización; también muestra la
+apellidos, documento, sexo, teléfono, grado y organización; también muestra la
 inscripción exacta: código/fecha de registro, evento/fechas/lugar/ciudad, cargo,
 Jefe de Dojo, invitado, observaciones, costo, pagado, descuento y saldo.
 Se genera un modal por fila de la página actual, fuera de la tabla, con IDs
@@ -247,6 +533,11 @@ el botón y los datos adicionales del modal no se envían a ese rol.
 
 ### Invitados sin costo
 
+En el reporte impreso, un invitado muestra su cargo en una sola línea y una
+celda centrada «Sin costo» que ocupa Costo, Pagado y Saldo (colspan 3). Se
+omite allí la observación automática «invitado sin costo» y los importes cero.
+El listado administrativo y el modal conservan sus datos y observaciones.
+
 El formulario de alta y edición de inscripciones ofrece la casilla **Invitado
 sin costo** a la derecha de Jefe de Dojo (en móviles se apilan). Al marcarla,
 la vista previa muestra tarifa cero y Observaciones, de sólo lectura, muestra
@@ -255,9 +546,9 @@ La gratuidad tiene prioridad sobre Jefe de Dojo y el grado; no requiere tarifa
 para ese grado ni tipo de cambio. Al desmarcarla se quita la observación automática
 y vuelven las reglas y validaciones de tarifa de Jefe de Dojo o del grado.
 
-`Inscripcion::tarifa()` devuelve `0.00` para invitados; listado, reporte y pagos
-muestran costo y saldo pendiente cero. La observación aparece en el listado,
-reporte y consulta de pagos. Se oculta el formulario de cobro y el servidor
+`Inscripcion::tarifa()` devuelve `0.00` para invitados; listado y pagos
+muestran costo y saldo pendiente cero, mientras el reporte muestra Sin costo.
+La observación aparece en el listado y consulta de pagos. Se oculta el formulario de cobro y el servidor
 rechaza pagos de invitados, comprobando el estado bajo bloqueo en la transacción.
 No se crean pagos ficticios de monto cero. Los pagos anteriores de una inscripción
 que se convierte en invitada se conservan y pueden producir saldo a favor;
@@ -683,3 +974,47 @@ Archivos: resources/views/layouts/app.blade.php, public/css/dashboard.css y
 certificado.md. Verificación: compilación y limpieza Blade correctas; sin nuevas
 pruebas automatizadas por ser cambio reversible de imagen/CSS. Sin QA visual
 interactiva en esta tarea.
+
+### 17/11/2026: catálogo numerado, tarifas por categoría y pie a 12 puntos
+
+Se reemplazaron Dan, Kyu y Jefe Dojo del catálogo por los 18 grados exactos de
+la imagen. Jefe de Dojo queda como opción independiente de inscripción. Se
+aplicó la migración 2026_11_17_000004 a la base operativa y se configuraron las
+18 tarifas del evento existente: Kyu $us 30, Dan $us 50; Dan con jefatura
+$us 100, sin sumar tarifas. Los invitados continúan gratuitos. Los 15
+participantes conservan su denominación general hasta editarse, por respuesta
+expresa del usuario; no se asignó un número. El pie del reporte pasó a 12 pt.
+
+Archivos principales: app/Support/CatalogoGrados.php, DatosPersona.php,
+Models/Grado.php, Persona.php e Inscripcion.php, controladores de inscripciones,
+eventos, grados y certificados; migración 000004, DatabaseSeeder, formularios
+de personas/eventos/inscripciones, vista imprimir.blade.php,
+public/css/inscripciones-imprimir.css y pruebas de catálogo, integración,
+certificado, gestión de eventos y vista previa JavaScript.
+
+Verificaciones nuevas de esta tarea:
+- Respaldo previo local: storage/app/backups/grados-antes-20261117-153502.json.
+- Comparación con ese respaldo: 15 inscripciones y 20 pagos idénticos; 15
+  personas conservan todos los demás atributos y su nombre de grado anterior.
+  Catálogo operativo comprobado contra la lista exacta de 18 nombres.
+- Renderizado Blade con datos operativos de catálogo, inscritos, edición y
+  reporte correcto. No fue una inspección visual en navegador.
+- Pruebas dirigidas finales: **34 aprobadas / 452 aserciones**. Incluyen
+  reemplazo repetible sin perder personas/pagos, conservación de grados sin
+  número, elección posterior dentro de categoría, las 18 tarifas con y sin
+  jefatura, invitados gratuitos, certificado Sensei y credencial con grado
+  numerado, formularios integrados y reporte.
+- JavaScript: **9 pruebas aprobadas**, incluida tarifa Kyu con Jefe de Dojo.
+- Suite PHP completa ejecutada antes del último caso de certificado numerado:
+  **82 aprobadas, 2 fallidas / 1008 aserciones**. Persisten los dos fallos
+  anteriores de expectativas de logos: AuthenticationTest espera Logo.png en
+  login y CredencialMovilTest prohíbe icono.png pese al favicon vigente.
+- Compilación y limpieza Blade correctas; git diff --check sin errores.
+
+Limitaciones: sin inspección visual interactiva ni prueba física de impresora;
+no se infieren los números de grados de participantes anteriores. Se conserva
+el bloqueo de cambio de categoría con inscripciones existentes. Las rutas
+antiguas de gestión de grados aún permiten otros nombres; el formulario
+integrado sólo acepta grados de la lista solicitada. La reversión de la
+migración reconstruye las referencias generales, pero no restaura tarifas
+eliminadas del catálogo: para ello existe el respaldo previo.

@@ -28,8 +28,8 @@ class EventoController extends Controller
             ->orderByDesc('fecha_inicio')->orderByDesc('id')->paginate($perPage)->withQueryString();
         return view('eventos.index', compact('eventos', 'q', 'estado', 'perPage'));
     }
-    public function create() { return view('eventos.form', ['evento' => new Evento, 'grados' => Grado::orderBy('nombre')->get()]); }
-    public function edit(Evento $evento) { $evento->load('grados'); return view('eventos.form', ['evento' => $evento, 'grados' => Grado::orderBy('nombre')->get()]); }
+    public function create() { return view('eventos.form', ['evento' => new Evento, 'grados' => Grado::ordenados()->get()]); }
+    public function edit(Evento $evento) { $evento->load('grados'); return view('eventos.form', ['evento' => $evento, 'grados' => Grado::ordenados()->get()]); }
     private function save(Request $request, Evento $evento): void
     {
         $data = $request->validate([

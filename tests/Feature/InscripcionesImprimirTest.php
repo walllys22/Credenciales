@@ -16,7 +16,7 @@ class InscripcionesImprimirTest extends TestCase
         $grado = Grado::create(['nombre' => 'Dan']);
         $evento = Evento::create(['nombre' => 'Evento de prueba', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
         for ($i = 1; $i <= 14; $i++) {
-            $persona = Persona::create(['primer_nombre' => 'Participante '.str_pad($i, 2, '0', STR_PAD_LEFT), 'primer_apellido' => 'Prueba', 'documento_identidad' => '9000'.$i, 'sexo' => 'Masculino', 'fecha_nacimiento' => '1990-01-01', 'telefono' => '70012345', 'grado_id' => $grado->id]);
+            $persona = Persona::create(['primer_nombre' => 'Participante '.str_pad($i, 2, '0', STR_PAD_LEFT), 'primer_apellido' => 'Prueba', 'documento_identidad' => '9000'.$i, 'sexo' => 'Masculino', 'telefono' => '70012345', 'grado_id' => $grado->id]);
             Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante']);
         }
         $this->get(route('inscripciones.index', ['evento_id' => $evento->id]))->assertOk()
@@ -26,7 +26,7 @@ class InscripcionesImprimirTest extends TestCase
         $response->assertViewHas('inscripciones', fn ($rows) => $rows->count() === 14)
             ->assertSeeInOrder(['Participante 01 Prueba', 'Participante 14 Prueba'])
             ->assertDontSee('<th>Evento</th>', false)->assertDontSee('Evento de prueba')->assertSee('Listado de Inscritos')
-            ->assertSeeInOrder(['<th>Tarifa</th>', '<th>Pagado</th>', '<th>Saldo</th>'], false);
+            ->assertSeeInOrder(['<th>Costo</th>', '<th>Pagado</th>', '<th>Saldo</th>'], false);
         $this->get(route('inscripciones.imprimir', ['evento_id' => 99999]))->assertOk()
             ->assertViewHas('inscripciones', fn ($rows) => $rows->isEmpty());
     }

@@ -16,7 +16,7 @@ class PagoTest extends TestCase
         $persona = Persona::create([
             'primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez',
             'documento_identidad' => (string) (Persona::count() + 1000),
-            'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-05-20',
+            'sexo' => 'Femenino',
             'telefono' => '70012345', 'grado_id' => $grado->id,
         ]);
         $evento = Evento::create([
@@ -231,5 +231,18 @@ class PagoTest extends TestCase
         $this->post($url, ['monto' => '10', 'fecha' => '2026-01-02', 'pago_total' => '1'])->assertSessionHasNoErrors();
         $this->assertSame('0.00', $inscripcion->pagos()->orderByDesc('id')->firstOrFail()->descuento);
         $this->get($url)->assertViewHas('saldoPendiente', '0.00')->assertViewHas('saldoAFavor', '10.00');
+    }
+
+    public function test_registration_list_shows_paid_amounts_in_the_original_currencies(): void
+    {
+        $inscripcion = $this->inscripcion();
+        $url = '/inscripciones?evento_id='.$inscripcion->evento_id;
+        $this->get($url)->assertOk()->assertSee('Bs 0,00');
+        $inscripcion->pagos()->create(['monto' => '139.20', 'moneda' => 'USD', 'monto_original' => '20.00', 'tipo_cambio' => '6.96', 'fecha' => '2026-01-01']);
+        $this->get($url)->assertOk()->assertSee('$us 20,00')->assertDontSee('Bs 139,20')
+            ->assertViewHas('inscripciones', fn ($items) => $items->first()->pagado_usd == 20 && !$items->first()->pagado_bs && $items->first()->total_pagado === '139.20');
+        $inscripcion->pagos()->create(['monto' => '100', 'fecha' => '2026-01-02', 'descuento' => '25']);
+        $this->get($url)->assertOk()->assertSee('Bs 100,00')->assertSee('$us 20,00')->assertDontSee('Bs 239,20')
+            ->assertViewHas('inscripciones', fn ($items) => $items->first()->pagado_usd == 20 && $items->first()->pagado_bs == 100 && $items->first()->total_pagado === '239.20' && $items->first()->saldo_pendiente === '326.30');
     }
 }

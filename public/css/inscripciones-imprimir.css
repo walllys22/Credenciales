@@ -1,10 +1,10 @@
 /* Carta vertical; membrete y espacios de cabecera/pie en cada página. */
 @page{size:letter portrait;margin:10mm}
 .registrations-report{position:relative;isolation:isolate;width:215.9mm;max-width:100%;min-height:279.4mm;margin-inline:auto;padding:10mm;background:#fff;border-radius:0}
-.report-letterhead{position:absolute;inset:10mm;width:calc(100% - 20mm);height:259.4mm;z-index:0;pointer-events:none}
-/* El pie se compone como texto para controlar sus 12 puntos sin alterar la imagen original. */
-.report-letterhead{clip-path:inset(0 0 9.5% 0)}
-.report-letterhead-footer{position:absolute;left:calc(10mm + 5.75%);right:calc(10mm + 5.75%);top:calc(10mm + 234mm);z-index:0;border-top:2px solid #111;padding-top:3mm;font:700 12pt/1.2 "Times New Roman",serif;text-align:center;color:#111;pointer-events:none}
+.report-letterhead{position:absolute;top:10mm;left:10mm;width:calc(100% - 20mm);height:38mm;object-fit:contain;z-index:0;pointer-events:none}
+/* La cabecera conserva su proporción; las líneas y el pie usan el ancho de la tabla. */
+.report-letterhead-header-rule{position:absolute;top:calc(10mm + 39mm);left:10mm;right:10mm;border-top:2px solid #d00;z-index:0;pointer-events:none}
+.report-letterhead-footer{position:absolute;left:10mm;right:10mm;top:calc(10mm + 234mm);z-index:0;border-top:2px solid #111;padding-top:3mm;font:700 12pt/1.2 "Times New Roman",serif;text-align:center;color:#111;pointer-events:none}
 .report-letterhead-footer::before{content:"";position:absolute;top:1mm;left:0;right:0;border-top:1px solid #d00}
 .report-letterhead-footer span,.report-footer-country{color:#d00}
 .registrations-report>.panel-toolbar,.registrations-report>.table-responsive{position:relative;z-index:1}
@@ -12,12 +12,12 @@
 .registrations-report .table-responsive{margin:0;overflow:visible}
 .registrations-report table{width:100%;table-layout:fixed;font:400 8.5pt/1.25 Arial,sans-serif;margin:0;border-collapse:collapse}
 .registrations-report th,.registrations-report td{padding:8px 4px;white-space:normal!important;overflow-wrap:anywhere;max-width:none;border-color:#dce4ef}
-/* Encabezados de datos: letra reducida 2 puntos, de 8.5pt a 6.5pt; no afecta al título. */
-.registrations-report thead tr:not(.report-print-heading) th{font-size:6.5pt;font-weight:600;background:#f0f4fa}
+/* Encabezados de datos: aumento del 30 % sobre 6.5pt; no afecta al título. */
+.registrations-report thead tr:not(.report-print-heading) th{font-size:8.45pt;font-weight:600;background:#f0f4fa}
 /* Resalta los pagos completados, incluidos los saldos liquidados por descuento. */
 .registrations-report .report-paid>td{background-color:#ffff99!important;--bs-table-bg:#ffff99;--bs-table-accent-bg:transparent;--bs-table-bg-state:transparent;--bs-table-bg-type:transparent;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 .registrations-report .report-print-heading th{height:46mm;vertical-align:bottom;padding:39mm 0 3mm;border:0;background:transparent;box-shadow:none}
-.report-print-heading h2{font:700 16pt/1.2 Arial,sans-serif;text-align:center;margin:0;color:#111}
+.report-print-heading h2{font:700 16pt/1.2 Arial,sans-serif;text-align:center;margin:0;padding-top:2mm;color:#111}
 .report-col-number{width:5%}
 .report-col-name{width:27%}
 .report-col-document{width:13%}
@@ -34,8 +34,9 @@
     .app-shell,.main-shell,body.sidebar-collapsed .main-shell{display:block!important;margin:0!important;min-height:0!important;width:auto!important}
     #main-content{padding:0!important;margin:0!important;max-width:none!important}
     .registrations-report{border:0;box-shadow:none;border-radius:0;padding:0;min-height:0;width:auto;max-width:none;margin:0;background:transparent;isolation:isolate}
-    .report-letterhead{position:fixed;inset:0 auto auto 0;width:195.9mm;height:259.4mm;z-index:0}
-    .report-letterhead-footer{position:fixed;top:234mm;left:11.3mm;right:auto;width:173.3mm}
+    .report-letterhead{position:fixed;inset:0 auto auto 0;width:195.9mm;height:38mm;z-index:0}
+    .report-letterhead-header-rule{position:fixed;top:39mm;left:0;right:auto;width:195.9mm}
+    .report-letterhead-footer{position:fixed;top:234mm;left:0;right:auto;width:195.9mm}
     .registrations-report .panel-toolbar{display:none}
     .registrations-report .table-responsive{overflow:visible;margin:0}
     .registrations-report table{width:100%;table-layout:fixed;font-size:8.5pt;line-height:1.25;margin:0;border-collapse:collapse}

@@ -28,7 +28,13 @@
                 <tr><th scope="col">ID</th><th scope="col">Nombre</th><th scope="col" class="text-end">Acciones</th></tr>
             </thead>
             <tbody>
+                @php($categoriaAnterior = null)
                 @forelse($grados as $grado)
+                    @php($categoria = $grado->categoria() ?? 'Otros')
+                    @if($categoria !== $categoriaAnterior)
+                        <tr class="table-light"><th colspan="3" scope="colgroup">{{ $categoria === 'Otros' ? 'Otros grados' : 'Grados '.$categoria }}</th></tr>
+                        @php($categoriaAnterior = $categoria)
+                    @endif
                     <tr>
                         <td>{{ $grado->id }}</td>
                         <td><strong>{{ $grado->nombre }}</strong></td>

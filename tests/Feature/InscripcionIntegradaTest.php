@@ -18,13 +18,15 @@ class InscripcionIntegradaTest extends TestCase
         $grado = Grado::create(['nombre' => '1er Dan']);
         $evento = Evento::create(['nombre' => 'Seminario', 'fecha_inicio' => '2026-12-01', 'fecha_final' => '2026-12-02', 'lugar' => 'Dojo', 'ciudad' => 'La Paz', 'tipo_cambio' => '4.00']);
         $evento->grados()->attach($grado, ['costo' => '200.00']);
-        return ['registro_integrado' => '1', 'primer_nombre' => 'Ana', 'segundo_nombre' => 'María', 'primer_apellido' => 'Pérez', 'segundo_apellido' => 'López', 'documento_identidad' => 'CI-123', 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-05-20', 'telefono' => '70012345', 'grado_id' => $grado->id, 'evento_id' => $evento->id, 'cargo' => 'Participante', 'jefe_dojo' => '0', 'invitado_sin_costo' => '0'];
+        return ['registro_integrado' => '1', 'primer_nombre' => 'Ana', 'segundo_nombre' => 'María', 'primer_apellido' => 'Pérez', 'segundo_apellido' => 'López', 'documento_identidad' => 'CI-123', 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado->id, 'evento_id' => $evento->id, 'cargo' => 'Participante', 'jefe_dojo' => '0', 'invitado_sin_costo' => '0'];
     }
 
     public function test_one_form_creates_person_photo_and_registration(): void
     {
         $data = $this->datos();
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('personas', 'fecha_nacimiento'));
         $this->get('/inscripciones/create')->assertOk()->assertSee('multipart/form-data')
+            ->assertDontSee('name="fecha_nacimiento"', false)
             ->assertSee('name="primer_nombre"', false)->assertSee('name="foto"', false)
             ->assertSee('name="grado_id"', false)->assertSee('name="cargo"', false)
             ->assertDontSee('> Persona <', false);
@@ -37,7 +39,7 @@ class InscripcionIntegradaTest extends TestCase
         $this->assertSame('200.00', Inscripcion::firstOrFail()->tarifa());
         $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()->assertSee($persona->foto_url, false)->assertSee('70012345')->assertSee('CI-123')->assertSee('Ana María Pérez López')
             ->assertSee('data-bs-target="#ver-participante-'.Inscripcion::firstOrFail()->id.'"', false)
-            ->assertSee('Datos del participante')->assertSee('20/05/1995')->assertSee('Segundo nombre')
+            ->assertSee('Datos del participante')->assertDontSee('Fecha de nacimiento')->assertSee('Segundo nombre')
             ->assertSee('Datos de la inscripción')->assertSee('Descuento');
     }
 

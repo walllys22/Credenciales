@@ -16,6 +16,8 @@ class InscripcionController extends Controller
     {
         $q = trim((string) $request->query('q', '')); $eventoId = $request->integer('evento_id');
         $inscripciones = Inscripcion::with(['evento.grados', 'persona.grado', 'persona.pais'])->withSum('pagos', 'monto')->withSum('pagos', 'descuento')->where('evento_id', $eventoId)
+            ->withSum(['pagos as pagado_bs' => fn ($query) => $query->where('moneda', 'BOB')], 'monto')
+            ->withSum(['pagos as pagado_usd' => fn ($query) => $query->where('moneda', 'USD')], 'monto_original')
             ->when($q !== '', fn ($query) => $query->whereHas('persona', fn ($query) => $query->where(function ($query) use ($q) {
                 foreach (['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad'] as $field) $query->orWhere($field, 'like', "%{$q}%");
             })))
@@ -70,7 +72,7 @@ class InscripcionController extends Controller
             'grado_id' => $persona->grado_id,
             'nombre' => $persona->nombre_completo.' · CI '.$persona->documento_identidad.' · '.$persona->grado->nombre,
             'eventos_inscritos' => $persona->inscripciones->where('id', '!=', $inscripcion->id)->pluck('evento_id')->values(),
-            'datos' => array_merge($persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id', 'organizacion']), ['fecha_nacimiento' => $persona->fecha_nacimiento?->format('Y-m-d')]),
+            'datos' => $persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id', 'organizacion']),
             'foto_url' => $persona->foto_url,
         ]);
         $personas = $todasPersonas->filter(fn ($persona) => $eventoSeleccionado && !$persona->inscripciones
@@ -79,7 +81,7 @@ class InscripcionController extends Controller
         return view('inscripciones.form', [
             'inscripcion' => $inscripcion,
             'persona' => $personaFormulario, 'personaSeleccionada' => $personaSeleccionada,
-            'grados' => Grado::orderBy('nombre')->get(),
+            'grados' => Grado::ordenados()->get(),
             'paises' => Pais::orderBy('nombre')->get(),
             'eventos' => Evento::with('grados')->orderBy('nombre')->get(),
             'personas' => $personas, 'opcionesPersonas' => $opcionesPersonas,
