@@ -23,7 +23,7 @@
                         <td>{{ $inscripcion->persona->nombre_completo }}</td>
                         <td>{{ $inscripcion->persona->documento_identidad }}</td>
                         <td>{{ $inscripcion->persona->grado->nombre }}</td>
-                        <td>{{ $inscripcion->cargo }}</td>
+                        <td>{{ $inscripcion->cargo }}@if($inscripcion->observaciones)<small class="d-block">{{ $inscripcion->observaciones }}</small>@endif</td>
                         <td class="text-nowrap">Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</td>
                         <td class="text-nowrap">
                             @if($inscripcion->pagado_bs > 0 || !($inscripcion->pagado_usd > 0))

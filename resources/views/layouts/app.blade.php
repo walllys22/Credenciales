@@ -28,7 +28,6 @@
         <a class="nav-link home-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon">@include('partials.icon', ['name' => 'home'])</span> Menú principal</a>
         <div class="nav-caption">Administración</div>
         <nav class="nav flex-column gap-2">
-            <a class="nav-link {{ request()->routeIs('personas.*') ? 'active' : '' }}" href="{{ route('personas.index') }}"><span class="nav-icon">@include('partials.icon', ['name' => 'personas'])</span> Persona <span class="nav-arrow">›</span></a>
             {{-- Catálogo de países ubicado debajo de Persona. --}}
             <a class="nav-link {{ request()->routeIs('paises.*') ? 'active' : '' }}" href="{{ route('paises.index') }}"><span class="nav-icon"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></span> País <span class="nav-arrow">›</span></a>
             <a class="nav-link {{ request()->routeIs('grados.*') ? 'active' : '' }}" href="{{ route('grados.index') }}"><span class="nav-icon">@include('partials.icon', ['name' => 'grados'])</span> Grado <span class="nav-arrow">›</span></a>

@@ -6,10 +6,13 @@ use Brick\Math\RoundingMode;
 class Inscripcion extends Model
 {
     protected $table = 'inscripciones';
-    protected $fillable = ['evento_id', 'persona_id', 'cargo', 'jefe_dojo'];
-    protected function casts(): array { return ['jefe_dojo' => 'boolean']; }
+    protected $fillable = ['evento_id', 'persona_id', 'cargo', 'jefe_dojo', 'invitado_sin_costo', 'observaciones'];
+    protected function casts(): array { return ['jefe_dojo' => 'boolean', 'invitado_sin_costo' => 'boolean']; }
     public function tarifa(): string
     {
+        if ($this->invitado_sin_costo) {
+            return '0.00';
+        }
         if ($this->jefe_dojo) {
             return (string) BigDecimal::of('100')->multipliedBy((string) ($this->evento->tipo_cambio ?? 0))->toScale(2, RoundingMode::HalfUp);
         }

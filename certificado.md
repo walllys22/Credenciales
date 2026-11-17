@@ -1,6 +1,6 @@
 # Memoria técnica de Credencial
 
-Actualizada: 12 de noviembre de 2026 (America/La_Paz).
+Actualizada: 17 de noviembre de 2026 (America/La_Paz).
 
 ## Actualización obligatoria de esta memoria
 
@@ -134,6 +134,63 @@ El listado de eventos muestra montos en $us y el tipo de cambio debajo.
 Importes y tipo de cambio no registrados se señalan explícitamente; no se
 deduce una cotización de mercado ni se reconvierten datos históricos por suposición.
 
+## Registro y listado unificados (17/11/2026)
+
+La navegación principal y el dashboard usan Inscripciones como entrada para
+participantes. Se retiró el enlace independiente Persona. Nueva inscripción y
+Editar inscripción incluyen datos personales, foto, grado, evento, cargo,
+Jefe de Dojo e Invitado sin costo en un único formulario multipart.
+El alta permite cargar opcionalmente a un participante existente, incluidas
+personas antiguas sin inscripción, sin duplicarlo ni exigir otra foto.
+La foto es obligatoria para participantes nuevos; al editar o reutilizar se
+conserva si no se envía otra. Los datos personales y la foto son compartidos
+por las inscripciones de la misma persona; el formulario de edición lo indica.
+Se mantiene bloqueado el cambio de grado de personas inscritas para proteger
+sus tarifas históricas y el cambio de persona desde la edición integrada.
+
+El guardado integrado usa una transacción: persona e inscripción se confirman
+juntas. Si falla la validación de inscripción se revierten los datos personales
+y se elimina únicamente la foto nueva. Una foto anterior sólo se elimina tras
+confirmar su reemplazo. No se modificaron tablas ni se migraron/eliminaron datos
+operativos para esta unificación. Personas, inscripciones, pagos y rutas de
+imágenes conservan sus relaciones e identificadores. Las rutas antiguas de
+Persona y los envíos anteriores con persona_id siguen disponibles para
+compatibilidad; no son el recorrido de la navegación principal.
+
+El listado único reúne foto ampliable, nombre, sexo, documento, grado, teléfono,
+cargo, observaciones y acciones. La tabla no muestra una columna Evento;
+el evento se elige en el filtro superior y su nombre aparece a la derecha de
+«Participantes inscritos». Sin un evento válido seleccionado, se muestra sólo
+el título. Los nombres largos pueden pasar a otra línea. Superadmin conserva tarifa, pagado,
+saldo y gestión; impresiones conserva sus restricciones. Arriba se muestra un
+select de eventos que filtra automáticamente, junto con búsqueda de todos los
+nombres/apellidos o documento. El filtro se conserva al paginar y al abrir una
+nueva inscripción. Imprimir respeta el evento elegido y sus totales de pagos;
+sin evento genera el reporte completo. El reporte no aplica el texto de búsqueda.
+
+### Invitados sin costo
+
+El formulario de alta y edición de inscripciones ofrece la casilla **Invitado
+sin costo** a la derecha de Jefe de Dojo (en móviles se apilan). Al marcarla,
+la vista previa muestra tarifa cero y Observaciones, de sólo lectura, muestra
+`invitado sin costo`. El servidor guarda esa observación en la inscripción.
+La gratuidad tiene prioridad sobre Jefe de Dojo y el grado; no requiere tarifa
+para ese grado ni tipo de cambio. Al desmarcarla se quita la observación automática
+y vuelven las reglas y validaciones de tarifa de Jefe de Dojo o del grado.
+
+`Inscripcion::tarifa()` devuelve `0.00` para invitados; listado, reporte y pagos
+muestran costo y saldo pendiente cero. La observación aparece en el listado,
+reporte y consulta de pagos. Se oculta el formulario de cobro y el servidor
+rechaza pagos de invitados, comprobando el estado bajo bloqueo en la transacción.
+No se crean pagos ficticios de monto cero. Los pagos anteriores de una inscripción
+que se convierte en invitada se conservan y pueden producir saldo a favor;
+no se implementan devoluciones automáticas. La regla de no duplicar inscripciones
+y la protección de persona/evento cuando existen pagos siguen vigentes.
+
+Migración aditiva `2026_11_17_000001_add_invitado_sin_costo_to_inscripciones.php`:
+agrega el booleano `invitado_sin_costo` (false por defecto) y `observaciones`
+nullable. Las inscripciones anteriores conservan su tarifa.
+
 ## Comandos y pruebas
 
 Instalación/actualización sin borrar datos:
@@ -165,6 +222,83 @@ No se hizo prueba
 física de impresora ni revisión visual interactiva del navegador.
 
 ## Historial
+
+### 17/11/2026: nombre del evento junto al título del listado
+
+El encabezado muestra el nombre del evento filtrado a la derecha de
+«Participantes inscritos». Se toma del catálogo de eventos cargado, con salida
+escapada por Blade; sin filtro válido se conserva sólo el título.
+Archivos: resources/views/inscripciones/index.blade.php y certificado.md.
+Verificación: compilación y limpieza Blade correctas; git diff --check sin errores.
+Sin pruebas nuevas ni suite completa por ser un cambio reversible de presentación.
+Sin revisión visual interactiva en esta tarea; no se modificaron datos.
+
+### 17/11/2026: retirada la columna Evento del listado
+
+Se quitó la columna Evento de la tabla de inscritos, conservando el selector
+superior y su filtrado. Cargo y observaciones se muestran debajo del nombre
+del participante; se ajustó el colspan del estado vacío para ambos roles.
+Archivos: resources/views/inscripciones/index.blade.php y certificado.md.
+Verificación de esta tarea: compilación y limpieza de vistas Blade correctas.
+Sin pruebas nuevas ni suite completa por ser un ajuste reversible de presentación;
+sin revisión visual interactiva. No se modificaron datos ni reglas de inscripción.
+
+### 17/11/2026: formulario y listado únicos de inscripciones
+
+Unificados datos personales/foto y datos de inscripción. Reutilización opcional
+de personas existentes, guardado transaccional y conservación de fotos/pagos.
+Retirado Persona de menú y dashboard. Listado combinado con fotos y filtro
+superior automático por evento; impresión filtrada por el mismo evento.
+Archivos principales: InscripcionController.php, PersonaController.php,
+app/Support/DatosPersona.php, personas/datos.blade.php y form.blade.php,
+inscripciones/form.blade.php e index.blade.php, layouts/app.blade.php,
+dashboard.blade.php, InscripcionIntegradaTest.php, PaisTest.php,
+InscripcionesImprimirTest.php, inscripciones-invitado.test.cjs y certificado.md.
+
+Verificaciones nuevas de esta tarea:
+- Pruebas integradas nuevas: **5 aprobadas / 70 aserciones**. Alta conjunta,
+  foto obligatoria/válida, rollback de datos/fotos por error, invitado gratuito,
+  reutilización sin duplicados, conservación de pagos y foto, edición/reemplazo,
+  protección de grado, filtro e impresión por evento.
+- EventManagementTest: **14 aprobadas / 151 aserciones** durante la implementación.
+- Suite PHP final: **74 aprobadas, 2 fallidas / 834 aserciones**. Persisten las dos
+  discrepancias de logos en AuthenticationTest y CredencialMovilTest documentadas
+  en la tarea anterior. Los tests de navegación e impresión se actualizaron al
+  comportamiento vigente y ya no fallan.
+- JavaScript final: **6 pruebas aprobadas**, incluidos carga de datos/foto de un
+  participante existente, limpieza al elegir uno nuevo, duplicados y gratuidad.
+- Sintaxis PHP de ambos controladores y DatosPersona correcta; compilación y
+  limpieza Blade correctas; git diff --check sin errores.
+- La revisión visual interactiva quedó sin completar: después de dos timeouts
+  y reiniciar el controlador, Computer Use detuvo la captura porque no pudo
+  determinar la URL actual del navegador con suficiente confianza para aplicar
+  su política. No se realizaron más acciones de navegador. Sin prueba física
+  de impresión. No se ejecutaron escrituras sobre datos operativos en esta tarea.
+
+### 17/11/2026: invitado sin costo en inscripciones
+
+Agregada casilla junto a Jefe de Dojo, tarifa cero con prioridad sobre otras
+tarifas y observación automática `invitado sin costo`. Alta/edición, listado,
+reporte y consulta de pagos reflejan la gratuidad. Cobros bloqueados en servidor.
+Archivos principales: InscripcionController.php, PagoController.php,
+app/Models/Inscripcion.php, vistas inscripciones/form, index, imprimir y pagos,
+migración 2026_11_17_000001, tests/Feature/EventManagementTest.php,
+tests/JavaScript/inscripciones-invitado.test.cjs y certificado.md.
+
+Verificaciones ejecutadas en esta tarea:
+- Migración aplicada correctamente a la base configurada, sin borrar datos.
+- Compilación y limpieza de vistas Blade correctas.
+- Pruebas dirigidas EventManagementTest: **14 aprobadas / 151 aserciones**.
+  Incluyen alta y edición de invitados, observación persistida, prioridad sobre
+  Jefe de Dojo, falta de tipo de cambio/tarifa, bloqueo de cobros Bs/USD,
+  consulta de saldos, duplicados, validación booleana y retorno a tarifa normal.
+- JavaScript: **5 pruebas aprobadas**, dos nuevas para la casilla, observaciones,
+  carga inicial de invitado y restauración de la tarifa al desmarcarla.
+- Suite PHP completa: **69 aprobadas, 2 fallidas / 761 aserciones**. Pendientes
+  ajenos a este cambio en pruebas de identidad visual: AuthenticationTest espera
+  Logo.png en login, cuya vista usa icono.png; CredencialMovilTest prohíbe icono.png
+  aunque la ficha lo usa como favicon. Esos archivos no se modificaron en esta tarea.
+- Sin revisión visual interactiva de navegador ni prueba física de impresión.
 
 ### 12/11/2026: imagen del perfil de impresiones
 

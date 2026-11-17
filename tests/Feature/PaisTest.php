@@ -19,7 +19,8 @@ class PaisTest extends TestCase
         $this->get(route('paises.index'))->assertOk()
             ->assertSeeInOrder(['Argentina', 'Bolivia', 'Chile', 'Estados Unidos']);
         $this->get(route('dashboard'))->assertOk()
-            ->assertSeeInOrder([route('personas.index'), route('paises.index'), route('grados.index')], false);
+            ->assertSeeInOrder([route('paises.index'), route('grados.index'), route('inscripciones.index')], false)
+            ->assertDontSee('href="'.route('personas.index').'"', false);
     }
 
     public function test_country_can_be_created_edited_searched_and_deleted(): void

@@ -11,7 +11,7 @@ class InscripcionesImprimirTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_report_lists_every_registration_even_with_filters_and_without_pagination(): void
+    public function test_report_lists_all_event_registrations_without_pagination(): void
     {
         $grado = Grado::create(['nombre' => 'Dan']);
         $evento = Evento::create(['nombre' => 'Evento de prueba', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Coliseo', 'ciudad' => 'Trinidad']);
@@ -22,11 +22,13 @@ class InscripcionesImprimirTest extends TestCase
         $this->get(route('inscripciones.index'))->assertOk()
             ->assertSeeInOrder([route('inscripciones.imprimir'), route('inscripciones.create')], false)
             ->assertSee('images/Impresora.png', false);
-        $response = $this->get(route('inscripciones.imprimir', ['q' => 'inexistente', 'evento_id' => 99999]))->assertOk();
+        $response = $this->get(route('inscripciones.imprimir', ['q' => 'inexistente', 'evento_id' => $evento->id]))->assertOk();
         $response->assertViewHas('inscripciones', fn ($rows) => $rows->count() === 14)
             ->assertSeeInOrder(['Participante 01 Prueba', 'Participante 14 Prueba'])
             ->assertDontSee('<th>Evento</th>', false)->assertDontSee('Evento de prueba')->assertSee('Listado de Inscritos')
             ->assertSeeInOrder(['<th>Tarifa</th>', '<th>Pagado</th>', '<th>Saldo</th>'], false);
+        $this->get(route('inscripciones.imprimir', ['evento_id' => 99999]))->assertOk()
+            ->assertViewHas('inscripciones', fn ($rows) => $rows->isEmpty());
     }
 
     public function test_report_amounts_include_mixed_payments_and_discount_without_inflating_paid_total(): void

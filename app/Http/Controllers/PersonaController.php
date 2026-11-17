@@ -22,19 +22,7 @@ class PersonaController extends Controller
     public function edit(Persona $persona) { return view('personas.form', ['persona' => $persona, 'grados' => Grado::orderBy('nombre')->get()]); }
     private function validated(Request $request, ?Persona $persona = null): array
     {
-        $data = $request->validate([
-            'primer_nombre' => 'required|string|max:100', 'segundo_nombre' => 'nullable|string|max:100',
-            'primer_apellido' => 'required|string|max:100', 'segundo_apellido' => 'nullable|string|max:100',
-            'documento_identidad' => ['nullable', 'string', 'max:50', Rule::unique('personas')->ignore($persona)],
-            'sexo' => ['required', Rule::in(['Masculino', 'Femenino', 'Otro'])],
-            'fecha_nacimiento' => 'nullable|date|before_or_equal:today', 'telefono' => 'nullable|string|max:30',
-            'grado_id' => 'required|exists:grados,id',
-            'foto' => [ $persona ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120', 'dimensions:max_width=6000,max_height=6000' ],
-        ]);
-        if ($persona && $persona->grado_id != $data['grado_id'] && $persona->inscripciones()->exists()) {
-            throw ValidationException::withMessages(['grado_id' => 'Retira primero las inscripciones de esta persona antes de cambiar su grado.']);
-        }
-        return $data;
+        return \App\Support\DatosPersona::validated($request, $persona);
     }
     private function save(Request $request, Persona $persona): void
     {

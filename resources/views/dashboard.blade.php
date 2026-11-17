@@ -3,8 +3,8 @@
 @section('title', 'Dashboard')
 @section('content')
 <div class="row g-4 mb-4">
-    @foreach([['label' => 'Personas', 'total' => $personas, 'route' => 'personas.index', 'icon' => 'personas'], ['label' => 'Grados', 'total' => $grados, 'route' => 'grados.index', 'icon' => 'grados'], ['label' => 'Eventos', 'total' => $eventos, 'route' => 'eventos.index', 'icon' => 'eventos'], ['label' => 'Inscripciones', 'total' => $inscripciones, 'route' => 'inscripciones.index', 'icon' => 'inscripciones']] as $item)
-        <div class="col-sm-6 col-xl-3"><a class="dashboard-stat panel" href="{{ route($item['route']) }}"><span class="stat-icon">@include('partials.icon', ['name' => $item['icon']])</span><span><strong>{{ $item['total'] }}</strong><span>{{ $item['label'] }}</span></span></a></div>
+    @foreach([['label' => 'Grados', 'total' => $grados, 'route' => 'grados.index', 'icon' => 'grados'], ['label' => 'Eventos', 'total' => $eventos, 'route' => 'eventos.index', 'icon' => 'eventos'], ['label' => 'Inscripciones', 'total' => $inscripciones, 'route' => 'inscripciones.index', 'icon' => 'inscripciones']] as $item)
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-stat panel" href="{{ route($item['route']) }}"><span class="stat-icon">@include('partials.icon', ['name' => $item['icon']])</span><span><strong>{{ $item['total'] }}</strong><span>{{ $item['label'] }}</span></span></a></div>
     @endforeach
 </div>
 <section class="panel">

@@ -183,6 +183,63 @@ class EventManagementTest extends TestCase
         $this->get(route('inscripciones.pagos.create', $inscripcion))->assertViewHas('saldoPendiente', '0.00');
     }
 
+    public function test_guest_is_free_with_observations_and_cannot_be_charged(): void
+    {
+        [$grado, $persona, $evento] = $this->fixtures();
+        $data = ['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Participante', 'jefe_dojo' => '1', 'invitado_sin_costo' => '1'];
+        $this->get('/inscripciones/create')->assertOk()->assertSee('id="invitado_sin_costo"', false)->assertSee('Observaciones');
+        $this->post('/inscripciones', $data)->assertRedirect('/inscripciones')->assertSessionHasNoErrors();
+        $inscripcion = Inscripcion::firstOrFail();
+        $this->assertTrue($inscripcion->invitado_sin_costo);
+        $this->assertSame('0.00', $inscripcion->tarifa());
+        $this->assertSame('invitado sin costo', $inscripcion->observaciones);
+        foreach (['/inscripciones', '/inscripciones/imprimir'] as $url) {
+            $this->get($url)->assertOk()->assertSee('invitado sin costo')->assertSee('Bs 0,00');
+        }
+        $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('invitado sin costo');
+        $this->get(route('inscripciones.pagos.create', $inscripcion))->assertOk()
+            ->assertViewHas('tarifa', '0.00')->assertViewHas('saldoPendiente', '0.00')
+            ->assertSee('invitado sin costo')->assertDontSee('Guardar pago');
+        foreach (['BOB', 'USD'] as $moneda) {
+            $this->post(route('inscripciones.pagos.store', $inscripcion), [
+                'monto' => '10', 'fecha' => '2026-01-01', 'moneda' => $moneda, 'pago_total' => '1',
+            ])->assertSessionHasErrors('monto');
+        }
+        $this->assertDatabaseCount('pagos', 0);
+        $this->post('/inscripciones', $data)->assertSessionHasErrors('persona_id');
+        $data['invitado_sin_costo'] = '0';
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertSame('100.00', $inscripcion->fresh()->tarifa());
+        $this->assertNull($inscripcion->fresh()->observaciones);
+        $data['jefe_dojo'] = '0';
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertSame('120.50', $inscripcion->fresh()->tarifa());
+    }
+
+    public function test_guest_needs_no_exchange_rate_or_grade_tariff_and_can_be_enabled_on_edit(): void
+    {
+        [$grado, $persona, $evento] = $this->fixtures();
+        $data = ['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Participante'];
+        $this->post('/inscripciones', $data)->assertSessionHasNoErrors();
+        $inscripcion = Inscripcion::firstOrFail();
+        $evento->update(['tipo_cambio' => null]);
+        $evento->grados()->detach();
+        $data += ['jefe_dojo' => '1', 'invitado_sin_costo' => '1'];
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertSame('0.00', $inscripcion->fresh()->tarifa());
+        $this->assertSame('invitado sin costo', $inscripcion->fresh()->observaciones);
+        $data['cargo'] = 'Invitado';
+        unset($data['invitado_sin_costo']);
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertTrue($inscripcion->fresh()->invitado_sin_costo);
+        $data['invitado_sin_costo'] = 'incorrecto';
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasErrors('invitado_sin_costo');
+        $this->delete(route('inscripciones.destroy', $inscripcion))->assertSessionHas('success');
+        $data['invitado_sin_costo'] = '1';
+        $this->post('/inscripciones', $data)->assertSessionHasNoErrors();
+        $this->assertSame('0.00', Inscripcion::firstOrFail()->tarifa());
+    }
+
     public function test_dojo_leader_requires_exchange_rate_and_works_without_a_grade_tariff(): void
     {
         [$grado, $persona, $evento] = $this->fixtures();

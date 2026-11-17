@@ -81,7 +81,10 @@ class PagoController extends Controller
 
         $data['pago_total'] = $request->boolean('pago_total');
         DB::transaction(function () use ($inscripcion, $data) {
-            Inscripcion::whereKey($inscripcion->id)->lockForUpdate()->firstOrFail();
+            $inscripcion = Inscripcion::whereKey($inscripcion->id)->lockForUpdate()->firstOrFail();
+            if ($inscripcion->invitado_sin_costo) {
+                throw ValidationException::withMessages(['monto' => 'Este participante es invitado sin costo. No corresponde registrar cobros.']);
+            }
             $data['descuento'] = '0.00';
             if ($data['pago_total']) {
                 $inscripcion->load(['persona', 'evento.grados']);

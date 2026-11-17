@@ -1,43 +1,44 @@
 @extends('layouts.app')
 @section('section', 'Inscripción')
 @section('title', 'Inscripciones')
-@section('subtitle', 'Conecta a cada participante con su evento y su función en el encuentro.')
+@section('subtitle', 'Participantes, fotos e inscripciones en un solo lugar.')
 @section('actions')
     @if(auth()->user()->isSuperAdmin())
     {{-- Abre el listado completo de inscritos; botón verde a la izquierda de Nueva inscripción. --}}
-    <a href="{{ route('inscripciones.imprimir') }}" class="btn btn-create"><img src="{{ asset('images/Impresora.png') }}" width="22" height="22" alt=""> Imprimir</a>
-<a href="{{ route('inscripciones.create') }}" class="btn btn-primary">＋ Nueva inscripción</a>
+    <a href="{{ route('inscripciones.imprimir', ['evento_id' => request('evento_id')]) }}" class="btn btn-create"><img src="{{ asset('images/Impresora.png') }}" width="22" height="22" alt=""> Imprimir</a>
+<a href="{{ route('inscripciones.create', ['evento_id' => request('evento_id')]) }}" class="btn btn-primary">＋ Nueva inscripción</a>
     @endif
 @endsection
 @section('content')
 <section class="panel">
-<div class="panel-toolbar">
-    <div>
-        <h2>Registro de inscripciones</h2>
-        <p>{{ $inscripciones->total() }} resultados @if(auth()->user()->isSuperAdmin()) · Tarifas vigentes por grado @endif</p>
-    </div>
-    <form class="search-form flex-wrap" method="GET" role="search">
-        <label class="visually-hidden" for="evento_id">Filtrar por evento</label>
+<form class="row g-3 mb-4" method="GET" role="search" id="filtro-inscripciones">
+    <div class="col-md-6">
+        <label for="evento_id" class="form-label">Evento</label>
         <select id="evento_id" name="evento_id" class="form-select">
             <option value="">Todos los eventos</option>
-            @foreach($eventos as $evento)
-            <option value="{{ $evento->id }}" @selected(request('evento_id') == $evento->id)>{{ $evento->nombre }}</option>
-            @endforeach
+            @foreach($eventos as $evento)<option value="{{ $evento->id }}" @selected(request('evento_id') == $evento->id)>{{ $evento->nombre }}</option>@endforeach
         </select>
-        <label class="visually-hidden" for="q">Buscar participante</label>
-        <input id="q" name="q" class="form-control" placeholder="Nombre o documento…" value="{{ $q }}">
-        <button class="btn btn-outline-secondary">Filtrar</button>
-        @if($q || request('evento_id'))
-        <a class="btn btn-light" href="{{ route('inscripciones.index') }}">Limpiar</a>
-        @endif
-    </form>
+    </div>
+    <div class="col-md-6">
+        <label for="q" class="form-label">Buscar participante</label>
+        <div class="d-flex gap-2"><input id="q" name="q" class="form-control" placeholder="Nombre o documento…" value="{{ $q }}"><button class="btn btn-outline-secondary">Filtrar</button>
+        @if($q || request('evento_id'))<a class="btn btn-light" href="{{ route('inscripciones.index') }}">Limpiar</a>@endif</div>
+    </div>
+</form>
+<div class="panel-toolbar">
+    <div>
+        @php($eventoElegido = $eventos->firstWhere('id', request('evento_id')))
+        <h2 class="d-flex flex-wrap align-items-baseline gap-2">Participantes inscritos @if($eventoElegido)<span class="text-secondary">· {{ $eventoElegido->nombre }}</span>@endif</h2>
+        <p>{{ $inscripciones->total() }} resultados @if(auth()->user()->isSuperAdmin()) · Tarifas vigentes por grado @endif</p>
+    </div>
 </div>
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>
             <tr>
                 <th>Participante</th>
-                <th>Evento</th>
+                <th>Documento / Grado</th>
+                <th>Teléfono</th>
                 @if(auth()->user()->isSuperAdmin())
                 <th>Tarifa vigente</th>
                 <th>Pagado</th>
@@ -50,13 +51,15 @@
 @forelse($inscripciones as $inscripcion)
 <tr>
     <td>
-        <strong>{{ $inscripcion->persona->nombre_completo }}</strong>
-        <small class="d-block text-secondary">{{ $inscripcion->persona->documento_identidad }} · {{ $inscripcion->persona->grado->nombre }}</small>
+        <div class="person-cell">@include('personas.photo', ['persona' => $inscripcion->persona])<div>
+            <strong>{{ $inscripcion->persona->nombre_completo }}</strong>
+            <small>#{{ str_pad($inscripcion->persona->id, 4, '0', STR_PAD_LEFT) }} · {{ $inscripcion->persona->sexo }}</small>
+            <small class="d-block text-secondary">{{ $inscripcion->cargo }}</small>
+            @if($inscripcion->observaciones)<small class="d-block text-secondary">{{ $inscripcion->observaciones }}</small>@endif
+        </div></div>
     </td>
-    <td>
-        {{ $inscripcion->evento->nombre }}
-        <span class="d-block">{{ $inscripcion->cargo }}</span>
-    </td>
+    <td>{{ $inscripcion->persona->documento_identidad ?: '—' }}<span class="d-block"><span class="grade-badge">{{ $inscripcion->persona->grado->nombre }}</span></span></td>
+    <td>{{ $inscripcion->persona->telefono ?: '—' }}</td>
     @if(auth()->user()->isSuperAdmin())
     <td class="text-nowrap">
         Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}
@@ -87,7 +90,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="{{ auth()->user()->isSuperAdmin() ? 6 : 3 }}">
+    <td colspan="{{ auth()->user()->isSuperAdmin() ? 7 : 4 }}">
         <div class="empty-state">
             @include('partials.icon', ['name' => 'inscripciones'])
             <h3>{{ $q || request('evento_id') ? 'No hay inscripciones con estos filtros' : 'Haz parte del encuentro' }}</h3>
@@ -102,3 +105,12 @@
 </tbody></table></div><div class="panel-pagination">{{ $inscripciones->links() }}</div>
 </section>
 @endsection
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/person-photo-preview.css') }}?v={{ filemtime(public_path('css/person-photo-preview.css')) }}">
+@endpush
+@push('scripts')
+<script src="{{ asset('js/person-photo-preview.js') }}?v={{ filemtime(public_path('js/person-photo-preview.js')) }}" defer></script>
+<script>
+document.getElementById('evento_id').addEventListener('change', () => document.getElementById('filtro-inscripciones').requestSubmit());
+</script>
+@endpush

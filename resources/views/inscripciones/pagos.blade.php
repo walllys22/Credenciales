@@ -25,6 +25,13 @@
     </div>
 </section>
 
+@if($inscripcion->invitado_sin_costo)
+<div class="panel mb-4">
+    <label for="observaciones-inscripcion" class="form-label">Observaciones</label>
+    <textarea id="observaciones-inscripcion" class="form-control" rows="1" readonly>{{ $inscripcion->observaciones }}</textarea>
+    <p class="form-text">Inscripción gratuita. No corresponde registrar cobros.</p>
+</div>
+@else
 <form method="POST" action="{{ route('inscripciones.pagos.store', $inscripcion) }}" class="panel payment-form mb-4">
     @csrf
     <div class="payment-form-heading">
@@ -64,6 +71,7 @@
         <button type="submit" class="btn btn-primary">Guardar pago</button>
     </div>
 </form>
+@endif
 
 <section class="panel">
     <div class="panel-toolbar"><div><h2>Historial de pagos</h2><p>Los pagos en dólares se descuentan al tipo de cambio guardado en cada pago. El saldo restante se expresa en bolivianos.</p></div></div>
