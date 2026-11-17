@@ -36,7 +36,7 @@
         <option value="0" @selected(!old('jefe_dojo', $inscripcion->jefe_dojo))>No</option>
         <option value="1" @selected(old('jefe_dojo', $inscripcion->jefe_dojo))>Sí</option>
     </select>
-    <p class="form-text">Si es Jefe de Dojo, la tarifa es de $us 100, convertida al tipo de cambio del evento.</p>
+    <p class="form-text">Dan y Jefe de Dojo: $us 100. Kyu: $us 30; Dan sin jefatura: $us 50. Se convierte al tipo de cambio del evento.</p>
     @error('jefe_dojo')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 <div class="col-md-6 mb-4">
@@ -66,6 +66,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const tarifas = {{ Illuminate\Support\Js::from($tarifas) }};
     const tarifasJefe = {{ Illuminate\Support\Js::from($tarifasJefe) }};
+    const gradosDan = {{ Illuminate\Support\Js::from($grados->filter(fn ($grado) => $grado->esDan())->pluck('id')) }};
     const jefeDojo = document.getElementById('jefe_dojo');
     const invitado = document.getElementById('invitado_sin_costo');
     const evento = document.getElementById('evento_id');
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grado = document.getElementById('grado_id');
     const foto = document.getElementById('foto');
     const preview = document.getElementById('foto-preview');
-    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono', 'grado_id', 'pais_id'];
+    const datos = ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'fecha_nacimiento', 'telefono', 'grado_id', 'pais_id', 'organizacion'];
     function cargarPersona() {
         const opcion = opcionesPersonas.find(opcion => String(opcion.id) === persona.value);
         datos.forEach(campo => { document.getElementById(campo).value = opcion?.datos[campo] ?? ''; });
@@ -88,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarTarifa();
     }
     function actualizarTarifa() {
-        const esJefe = jefeDojo.value === '1';
+        const esJefe = jefeDojo.value === '1' && gradosDan.some(id => String(id) === grado.value);
         const opcion = opcionesPersonas.find(opcion => String(opcion.id) === persona.value);
         const duplicado = opcion?.eventos_inscritos.some(id => String(id) === evento.value);
         document.getElementById('observaciones').value = invitado.checked ? 'invitado sin costo' : '';

@@ -41,12 +41,13 @@
 <div class="row">
 @foreach($grados as $grado)
 @php($tarifa = $evento->grados->firstWhere('id', $grado->id)?->pivot)
-@php($costoUsd = $tarifa?->costo_usd !== null ? number_format((float) $tarifa->costo_usd, 2, '.', '') : '')
+@php($fijo = in_array($grado->nombre, \App\Models\Grado::DETALLADOS, true))
+@php($costoUsd = $fijo ? $grado->costoBaseUsd() : ($tarifa?->costo_usd !== null ? number_format((float) $tarifa->costo_usd, 2, '.', '') : ''))
 @php($costoBs = $tarifa ? number_format((float) $tarifa->costo, 2, '.', '') : '')
 <div class="col-md-6 mb-4" data-tarifa-grado>
     <h3 class="h6 mb-2">{{ $grado->nombre }}</h3>
     <label for="costo-usd-{{ $grado->id }}" class="form-label">Costo en dólares</label>
-    <div class="input-group mb-2"><span class="input-group-text">$us</span><input id="costo-usd-{{ $grado->id }}" name="costos_usd[{{ $grado->id }}]" data-costo-usd type="number" min="0" max="9999999999.99" step="0.01" class="form-control @error('costos_usd.'.$grado->id) is-invalid @enderror" value="{{ old('costos_usd.'.$grado->id, $costoUsd) }}" placeholder="Sin tarifa">@error('costos_usd.'.$grado->id)<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+    <div class="input-group mb-2"><span class="input-group-text">$us</span><input id="costo-usd-{{ $grado->id }}" name="costos_usd[{{ $grado->id }}]" data-costo-usd type="number" min="0" max="9999999999.99" step="0.01" class="form-control @error('costos_usd.'.$grado->id) is-invalid @enderror" value="{{ $fijo ? $costoUsd : old('costos_usd.'.$grado->id, $costoUsd) }}" @readonly($fijo) placeholder="Sin tarifa">@error('costos_usd.'.$grado->id)<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
     <label for="costo-bs-{{ $grado->id }}" class="form-label">Costo en bolivianos (calculado)</label>
     <div class="input-group"><span class="input-group-text">Bs.-</span><input id="costo-bs-{{ $grado->id }}" data-costo-bs data-anterior="{{ $evento->tipo_cambio === null ? $costoBs : '' }}" type="text" class="form-control bg-light" value="{{ $costoBs }}" readonly placeholder="Sin tarifa" aria-live="polite"></div>
 </div>

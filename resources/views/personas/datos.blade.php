@@ -25,6 +25,10 @@
 <div class="col-md-6"><div class="form-section-heading"><span class="step-number">02</span><div><h2>Grado del participante</h2><p>El grado determina la tarifa en cada evento.</p></div></div></div>
 <div class="col-md-6"><label class="form-label" for="grado_id">Grado <span class="required">*</span></label><select name="grado_id" id="grado_id" class="form-select @error('grado_id') is-invalid @enderror" required><option value="">Seleccionar grado</option>@foreach($grados as $grado)<option value="{{ $grado->id }}" @selected(old('grado_id', $persona->grado_id) == $grado->id)>{{ $grado->nombre }}</option>@endforeach</select>@error('grado_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
 <p class="form-text mt-2">¿Necesitas otro grado? <a href="{{ route('grados.index') }}">Gestionar grados</a></p>
+@if($persona->exists && !$persona->grado_id)<p class="form-text">Grado anterior: {{ $persona->grado->nombre }}. Selecciona su grado numerado para guardar los cambios.</p>@endif
 </div>
 </div>
 @if($grados->isEmpty())<div class="alert alert-warning">Agrega al menos un grado antes de registrar personas.</div>@endif
+<div class="row mt-3">
+    <x-field class="col-12" name="organizacion" label="Organización del participante" :value="$persona->organizacion" maxlength="255"/>
+</div>

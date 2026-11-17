@@ -10,7 +10,7 @@ class GradoController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $grados = Grado::when($q !== '', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
-            ->orderBy('nombre')->paginate(12)->withQueryString();
+            ->orderBy('id')->paginate(25)->withQueryString();
 
         return view('grados.index', compact('grados', 'q'));
     }

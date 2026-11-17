@@ -55,6 +55,12 @@ class EventoController extends Controller
                 $tarifas[$id] = ['costo' => (string) $bolivianos, 'costo_usd' => (string) BigDecimal::of((string) $costo)->toScale(2)];
             }
         }
+        if (!empty($data['tipo_cambio'])) {
+            foreach (Grado::whereIn('nombre', Grado::DETALLADOS)->get() as $grado) {
+                $usd = $grado->costoBaseUsd();
+                $tarifas[$grado->id] = ['costo_usd' => $usd, 'costo' => (string) BigDecimal::of($usd)->multipliedBy((string) $data['tipo_cambio'])->toScale(2, RoundingMode::HalfUp)];
+            }
+        }
         if (!$tarifas) throw ValidationException::withMessages(['costos_usd' => 'Define el costo en dólares de al menos un grado. Puedes usar 0 para acceso gratuito.']);
         if ($evento->exists && $evento->inscripciones()->whereHas('persona', fn ($q) => $q->whereNotIn('grado_id', array_keys($tarifas)))->exists()) {
             throw ValidationException::withMessages(['costos_usd' => 'No puedes retirar la tarifa de un grado que tiene personas inscritas.']);

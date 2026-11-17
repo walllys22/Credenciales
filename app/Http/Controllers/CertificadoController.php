@@ -11,7 +11,7 @@ class CertificadoController extends Controller
         $inscripcion->load(['persona.grado', 'evento']);
         $persona = $inscripcion->persona;
         $evento = $inscripcion->evento;
-        $esDan = mb_strtoupper(trim($persona->grado->nombre), 'UTF-8') === 'DAN';
+        $esDan = $persona->grado->esDan();
         $nombreCertificado = ($esDan ? 'Sensei ' : '').$persona->nombre_completo;
 
         return response()->view('inscripciones.vercert', compact('inscripcion', 'persona', 'evento', 'nombreCertificado'))

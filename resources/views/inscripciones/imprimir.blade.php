@@ -9,6 +9,7 @@
 @section('content')
 <section class="panel registrations-report">
     <img class="report-letterhead" src="{{ asset('images/Membrete.png') }}" alt="" aria-hidden="true">
+    <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
     <div class="table-responsive">
         <table class="table align-middle">
             <colgroup><col class="report-col-number"><col class="report-col-name"><col class="report-col-document"><col class="report-col-grade"><col class="report-col-role"><col class="report-col-money"><col class="report-col-money"><col class="report-col-money"></colgroup>

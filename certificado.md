@@ -74,13 +74,22 @@ Los filtros y la paginación del listado siguen disponibles.
 Los botones de acción usan un formato común de 38 × 38 px, radio de 5 px,
 icono centrado, tooltip y nombre accesible. `botones.css` asigna 19 colores
 distintos por función mediante data-action-style: la misma función conserva
-su color en cada módulo. Editar es azul; eliminar rojo; Certifica amarillo
-(#e0ac00) con el archivo original images/diploma.png; Credencial usa ocre.
+su color en cada módulo. Cerrar usa gris medio (#808080), Ver amarillo,
+Editar celeste, Nuevo verde, Pago otro tono verde y Eliminar rojo.
+Imprimir usa azul (#3974ce). Las demás funciones usan tonos suaves propios;
+Certifica usa lavanda con el archivo original images/diploma.png y Credencial
+un tono arena. Esta paleta reemplaza los colores anteriores por pedido del usuario.
 Crear, guardar, imprimir, volver, cancelar, buscar, filtrar, limpiar, pagos,
 ver, inscripciones, gestionar, ingresar y menú tienen colores propios.
 La etiqueta textual permanece accesible pero visualmente oculta. Se mantienen
 los controles de navegación de cuenta/barra lateral, vista previa de fotos y
 el ojo de contraseña como controles específicos de esas interfaces.
+Los modales comparten el color de la acción que los abre: encabezado y borde
+del mismo color y cuerpo/pie con un matiz claro. Se asigna la función en el HTML
+y modal-colores.js la sincroniza con el botón al abrir; los botones internos,
+como Cerrar, mantienen su propio color. Ver participante y Ver evento son
+amarillos; las confirmaciones de eliminación son rojas, reemplazando el amarillo
+anterior. Texto oscuro en amarillo/celeste para mejorar su legibilidad.
 El contenedor del icono del perfil usa fondo transparente, dejando visible
 el azul del botón de cuenta alrededor de la imagen. icono.png ya tiene canal
 alfa transparente; no se alteró el archivo gráfico ni el desplegable.
@@ -162,6 +171,14 @@ Editar inscripción incluyen datos personales, foto, grado, evento, cargo,
 Jefe de Dojo e Invitado sin costo en un único formulario multipart.
 La sección de grado dispone el encabezado a la izquierda y el selector con
 el enlace Gestionar grados a la derecha; en pantallas pequeñas se apilan.
+Debajo de esa sección aparece Organización del participante: texto opcional de
+hasta 255 caracteres, guardado en personas.organizacion y compartido por las
+inscripciones de la persona. Se conserva al editar/cargar el participante y se
+muestra en el modal de detalle. La migración 2026_11_17_000003 agrega la columna
+nullable y asigna Shorin Ryu Shorinkan Bolivia a todas las personas anteriores,
+por confirmación del usuario. Los participantes nuevos pueden escribir su
+organización; no se les asigna una automáticamente. Los envíos antiguos que
+omiten el campo conservan el valor existente; el campo vacío permite borrarlo.
 El selector País del participante está a la derecha del encabezado Datos de la
 inscripción. Se guarda en personas.pais_id (nullable, FK a paises), se recupera
 al editar o cargar un participante existente y valida que el país exista.
@@ -188,13 +205,18 @@ Persona y los envíos anteriores con persona_id siguen disponibles para
 compatibilidad; no son el recorrido de la navegación principal.
 
 El listado único reúne foto ampliable, nombre, sexo, documento, grado, teléfono,
-cargo, país debajo del cargo, observaciones y acciones. Los importes se agrupan
+cargo, país y observaciones junto a la foto. En Participante, el nombre va en la
+primera línea; debajo, código y sexo seguidos de guion y documento; en la tercera
+línea, cargo y país uno junto al otro. La columna Organización / Grado muestra
+la organización de la persona arriba y su etiqueta de grado debajo; si no tiene
+organización, indica Sin organización registrada. El documento no se duplica.
+Los importes se agrupan
 en una única columna Costo / Pagado / Saldo, en tres líneas etiquetadas. La tabla no muestra una columna Evento;
 el evento se elige en el filtro superior y su nombre aparece a la derecha de
 «Participantes inscritos». Sin un evento válido seleccionado, se muestra sólo
 el título. Los nombres largos pueden pasar a otra línea. Superadmin conserva tarifa, pagado,
 saldo y gestión; impresiones conserva sus restricciones y no ve la columna de
-importes. La eliminación se confirma mediante modal amarillo con nombre y evento,
+importes. La eliminación se confirma mediante modal rojo con nombre y evento,
 explicación de irreversibilidad, conservación de datos/foto y bloqueo si hay pagos.
 Cancelar no envía el formulario; sólo Sí, eliminar inscripción confirma el envío.
 Arriba se muestra un
@@ -211,7 +233,7 @@ Las etiquetas de grados distinguen Dan (violeta) y Kyu (naranja), conservando
 el nombre como identificación; se aplica en los listados unificado y antiguo.
 En Acciones, superadmin dispone de Ver participante (ojo, color de la función
 Ver). Abre un modal Bootstrap de sólo lectura con foto, país, código, nombres,
-apellidos, documento, sexo, nacimiento, teléfono y grado; también muestra la
+apellidos, documento, sexo, nacimiento, teléfono, grado y organización; también muestra la
 inscripción exacta: código/fecha de registro, evento/fechas/lugar/ciudad, cargo,
 Jefe de Dojo, invitado, observaciones, costo, pagado, descuento y saldo.
 Se genera un modal por fila de la página actual, fuera de la tabla, con IDs
@@ -277,6 +299,79 @@ No se hizo prueba
 física de impresora ni revisión visual interactiva del navegador.
 
 ## Historial
+
+### 17/11/2026: columna Organización / Grado
+
+Renombrada la columna Grado (anteriormente Documento / Grado) a Organización /
+Grado. Cada celda muestra la organización del participante arriba y su grado
+con etiqueta de color debajo, con mensaje explícito si la organización está vacía.
+Archivos: resources/views/inscripciones/index.blade.php,
+tests/Feature/InscripcionIntegradaTest.php y certificado.md.
+Verificación: InscripcionIntegradaTest **9 pruebas / 115 aserciones aprobadas**;
+compilación y limpieza Blade correctas; git diff --check sin errores.
+Sin pruebas nuevas ni suite completa por ser un cambio
+reversible de presentación. Sin revisión visual interactiva ni cambios de datos.
+
+### 17/11/2026: reorganización de la columna Participante
+
+La celda conserva la foto a la izquierda y muestra a la derecha nombre,
+código/sexo - documento y, debajo, cargo junto al país. Se trasladó el documento
+a esa segunda línea y se renombró Documento / Grado como Grado, conservando
+su etiqueta de color. En pantallas estrechas, cargo y país pueden ajustar línea.
+Archivos: resources/views/inscripciones/index.blade.php,
+tests/Feature/InscripcionIntegradaTest.php y certificado.md.
+Verificación: InscripcionIntegradaTest **9 pruebas / 115 aserciones aprobadas**;
+compilación y limpieza Blade correctas; git diff --check sin errores.
+Sin pruebas nuevas ni suite completa por ser un ajuste
+reversible de presentación. Sin revisión visual interactiva ni cambios de datos.
+
+### 17/11/2026: organización del participante y asignación inicial
+
+Agregado Organización del participante debajo de la sección Grado del
+participante en el formulario compartido. Guardado/validación, edición, carga
+de datos existentes y modal de consulta incluyen la organización. Migración
+aditiva aplicada en la base configurada; asignó Shorin Ryu Shorinkan Bolivia
+a las **15 personas existentes**, con **0 inscritos sin esa asignación**.
+Se conservaron **15 inscripciones y 20 pagos**. Las huellas SHA-256 de los datos
+anteriores de personas (excluyendo únicamente la columna nueva), inscripciones
+y pagos coinciden antes/después de la migración: no se alteraron los demás datos.
+
+Archivos principales: migración 2026_11_17_000003_add_organizacion_to_personas.php,
+Persona.php, DatosPersona.php, InscripcionController.php,
+personas/datos.blade.php, inscripciones/form.blade.php y detalle.blade.php,
+InscripcionIntegradaTest.php, inscripciones-invitado.test.cjs y certificado.md.
+Verificaciones nuevas: **15 pruebas PHP / 188 aserciones aprobadas** (registro
+integrado y fotos), **8 pruebas JavaScript aprobadas**, incluyendo carga/limpieza
+de organización. Pruebas nuevas de persistencia, edición, límite de 255 caracteres,
+conservación al omitir el campo y asignación inicial sin alterar atributos/foto/
+inscripción ni sobrescribir organizaciones ya definidas. Compilación/limpieza
+Blade correctas y git diff --check sin errores. Sin suite completa ni revisión
+visual interactiva en esta tarea; las discrepancias históricas de logos siguen
+pendientes. No se agregó la organización a la credencial ni al reporte impreso.
+
+### 17/11/2026: colores indicados por acción y modales a juego
+
+Actualizada la paleta común: Cerrar gris medio, Ver amarillo, Editar celeste,
+Nuevo verde, Pago verde en otro tono, Eliminar rojo e Imprimir azul. El resto
+usa colores suaves distintos. Certifica conserva diploma.png y pasa a lavanda
+para no repetir el amarillo asignado a Ver en la nueva indicación.
+Modales de participante/evento y eliminación de inscripciones/pagos comparten
+color con el botón de apertura; encabezado y borde iguales y cuerpo/pie claros.
+Se agregó encabezado al detalle de evento. La sincronización genérica al abrir
+respeta el color propio de cada botón interior. No cambia la confirmación,
+la selección de registro ni las validaciones de pagos.
+Archivos: public/css/botones.css, public/js/modal-colores.js,
+layouts/app.blade.php, inscripciones/index, detalle y pagos.blade.php,
+eventos/index.blade.php y certificado.md.
+Verificaciones: paleta de 19 colores distintos y colores solicitados comprobados;
+sincronización modal/botón, apertura sin botón y exclusión de otros elementos
+comprobadas con ejecución JavaScript; **8 pruebas JavaScript aprobadas**.
+Pruebas PHP dirigidas: **35 aprobadas / 448 aserciones** (inscripción integrada,
+pagos, gestión de eventos y permisos de impresiones). Compilación/limpieza Blade
+correctas; git diff --check sin errores. Color azul de Imprimir y unicidad de la
+paleta comprobados de nuevo tras la última indicación del usuario.
+Sin revisión visual interactiva ni cambios de datos operativos; no se repitió
+la suite PHP completa por tratarse de presentación y sincronización de color.
 
 ### 17/11/2026: bandera y cierre inferior en el modal de participante
 

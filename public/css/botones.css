@@ -3,7 +3,7 @@
 :is(.btn-project,.modal)[data-action-style="delete"]{--action-color:#ce5057}
 :is(.btn-project,.modal)[data-action-style="create"]{--action-color:#4f9a65}
 :is(.btn-project,.modal)[data-action-style="save"]{--action-color:#718b75}
-:is(.btn-project,.modal)[data-action-style="print"]{--action-color:#64748b}
+:is(.btn-project,.modal)[data-action-style="print"]{--action-color:#3974ce}
 :is(.btn-project,.modal)[data-action-style="close"]{--action-color:#808080}
 :is(.btn-project,.modal)[data-action-style="cancel"]{--action-color:#9b8491}
 :is(.btn-project,.modal)[data-action-style="back"]{--action-color:#96816d}

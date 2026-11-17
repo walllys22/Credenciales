@@ -177,6 +177,7 @@ class EventManagementTest extends TestCase
     public function test_dojo_leader_uses_100_dollars_in_registration_report_payments_and_discount(): void
     {
         [$grado, $persona, $evento] = $this->fixtures();
+        $grado->update(['nombre' => 'Dan']);
         $evento->update(['tipo_cambio' => '11.81']);
         $data = ['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Organizador', 'jefe_dojo' => '1'];
         $this->get('/inscripciones/create')->assertOk()->assertSee('Jefe de Dojo');
@@ -203,6 +204,7 @@ class EventManagementTest extends TestCase
     public function test_guest_is_free_with_observations_and_cannot_be_charged(): void
     {
         [$grado, $persona, $evento] = $this->fixtures();
+        $grado->update(['nombre' => 'Dan']);
         $data = ['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Participante', 'jefe_dojo' => '1', 'invitado_sin_costo' => '1'];
         $this->get('/inscripciones/create')->assertOk()->assertSee('id="invitado_sin_costo"', false)->assertSee('Observaciones');
         $this->post('/inscripciones', $data)->assertRedirect('/inscripciones')->assertSessionHasNoErrors();
@@ -260,6 +262,7 @@ class EventManagementTest extends TestCase
     public function test_dojo_leader_requires_exchange_rate_and_works_without_a_grade_tariff(): void
     {
         [$grado, $persona, $evento] = $this->fixtures();
+        $grado->update(['nombre' => 'Dan']);
         $evento->update(['tipo_cambio' => null]);
         $data = ['evento_id' => $evento->id, 'persona_id' => $persona->id, 'cargo' => 'Organizador', 'jefe_dojo' => '1'];
         $this->post('/inscripciones', $data)->assertSessionHasErrors('jefe_dojo');

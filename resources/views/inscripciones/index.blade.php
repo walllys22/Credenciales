@@ -38,7 +38,7 @@
         <thead>
             <tr>
                 <th>Participante</th>
-                <th>Documento / Grado</th>
+                <th>Organización / Grado</th>
                 <th>Teléfono</th>
                 @if(auth()->user()->isSuperAdmin())
                 <th>Costo / Pagado / Saldo</th>
@@ -52,13 +52,15 @@
     <td>
         <div class="person-cell">@include('personas.photo', ['persona' => $inscripcion->persona])<div>
             <strong>{{ $inscripcion->persona->nombre_completo }}</strong>
-            <small>#{{ str_pad($inscripcion->persona->id, 4, '0', STR_PAD_LEFT) }} · {{ $inscripcion->persona->sexo }}</small>
-            <small class="d-block text-secondary">{{ $inscripcion->cargo }}</small>
-            <small class="d-block text-secondary">{{ $inscripcion->persona->pais?->nombre ?? 'País sin registrar' }}</small>
+            <small>#{{ str_pad($inscripcion->persona->id, 4, '0', STR_PAD_LEFT) }} · {{ $inscripcion->persona->sexo }} - {{ $inscripcion->persona->documento_identidad ?: '—' }}</small>
+            <small class="d-flex flex-wrap gap-2 text-secondary"><span>{{ $inscripcion->cargo }}</span><span>{{ $inscripcion->persona->pais?->nombre ?? 'País sin registrar' }}</span></small>
             @if($inscripcion->observaciones)<small class="d-block text-secondary">{{ $inscripcion->observaciones }}</small>@endif
         </div></div>
     </td>
-    <td>{{ $inscripcion->persona->documento_identidad ?: '—' }}<span class="d-block"><x-grado-badge :nombre="$inscripcion->persona->grado->nombre"/></span></td>
+    <td>
+        <div class="mb-1">{{ $inscripcion->persona->organizacion ?: 'Sin organización registrada' }}</div>
+        <x-grado-badge :nombre="$inscripcion->persona->grado->nombre"/>
+    </td>
     <td>{{ $inscripcion->persona->telefono ?: '—' }}</td>
     @if(auth()->user()->isSuperAdmin())
     <td class="text-nowrap">

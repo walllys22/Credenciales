@@ -29,6 +29,7 @@
                             <dt class="col-sm-5">Fecha de nacimiento</dt><dd class="col-sm-7">{{ $participante->fecha_nacimiento?->format('d/m/Y') ?? '—' }}</dd>
                             <dt class="col-sm-5">Teléfono</dt><dd class="col-sm-7">{{ $participante->telefono ?: '—' }}</dd>
                             <dt class="col-sm-5">Grado</dt><dd class="col-sm-7"><x-grado-badge :nombre="$participante->grado->nombre"/></dd>
+                            <dt class="col-sm-5">Organización</dt><dd class="col-sm-7">{{ $participante->organizacion ?: 'Sin registrar' }}</dd>
                         </dl>
                     </div>
                 </div>

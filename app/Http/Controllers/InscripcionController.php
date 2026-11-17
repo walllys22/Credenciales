@@ -70,7 +70,7 @@ class InscripcionController extends Controller
             'grado_id' => $persona->grado_id,
             'nombre' => $persona->nombre_completo.' · CI '.$persona->documento_identidad.' · '.$persona->grado->nombre,
             'eventos_inscritos' => $persona->inscripciones->where('id', '!=', $inscripcion->id)->pluck('evento_id')->values(),
-            'datos' => array_merge($persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id']), ['fecha_nacimiento' => $persona->fecha_nacimiento?->format('Y-m-d')]),
+            'datos' => array_merge($persona->only(['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'documento_identidad', 'sexo', 'telefono', 'grado_id', 'pais_id', 'organizacion']), ['fecha_nacimiento' => $persona->fecha_nacimiento?->format('Y-m-d')]),
             'foto_url' => $persona->foto_url,
         ]);
         $personas = $todasPersonas->filter(fn ($persona) => $eventoSeleccionado && !$persona->inscripciones
@@ -106,10 +106,14 @@ class InscripcionController extends Controller
             throw ValidationException::withMessages(['persona_id' => 'Esta inscripción tiene pagos registrados. No se puede cambiar la persona ni el evento.']);
         }
         $evento = Evento::findOrFail($data['evento_id']);
-        if (!$data['invitado_sin_costo'] && $data['jefe_dojo'] && (!$evento->tipo_cambio || $evento->tipo_cambio <= 0)) {
+        $tarifaJefe = $data['jefe_dojo'] && $persona->grado->esDan();
+        if (!$data['invitado_sin_costo'] && in_array($persona->grado->nombre, Grado::DETALLADOS, true) && (!$evento->tipo_cambio || $evento->tipo_cambio <= 0)) {
+            throw ValidationException::withMessages(['evento_id' => 'Configura el tipo de cambio del evento para calcular la tarifa en bolivianos.']);
+        }
+        if (!$data['invitado_sin_costo'] && $tarifaJefe && (!$evento->tipo_cambio || $evento->tipo_cambio <= 0)) {
             throw ValidationException::withMessages(['jefe_dojo' => 'Configura el tipo de cambio del evento para aplicar la tarifa de Jefe de Dojo de $us 100.']);
         }
-        if (!$data['invitado_sin_costo'] && !$data['jefe_dojo'] && !$evento->grados()->where('grados.id', $persona->grado_id)->exists()) {
+        if (!$data['invitado_sin_costo'] && !$tarifaJefe && !$evento->grados()->where('grados.id', $persona->grado_id)->exists()) {
             throw ValidationException::withMessages(['persona_id' => 'Este evento no tiene una tarifa para el grado de la persona. Configúrala en Evento.']);
         }
         return $data;

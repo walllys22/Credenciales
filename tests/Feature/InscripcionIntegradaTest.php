@@ -15,8 +15,8 @@ class InscripcionIntegradaTest extends TestCase
     private function datos(): array
     {
         Storage::fake('local');
-        $grado = Grado::create(['nombre' => 'Dan']);
-        $evento = Evento::create(['nombre' => 'Seminario', 'fecha_inicio' => '2026-12-01', 'fecha_final' => '2026-12-02', 'lugar' => 'Dojo', 'ciudad' => 'La Paz', 'tipo_cambio' => '6.96']);
+        $grado = Grado::create(['nombre' => '1er Dan']);
+        $evento = Evento::create(['nombre' => 'Seminario', 'fecha_inicio' => '2026-12-01', 'fecha_final' => '2026-12-02', 'lugar' => 'Dojo', 'ciudad' => 'La Paz', 'tipo_cambio' => '4.00']);
         $evento->grados()->attach($grado, ['costo' => '200.00']);
         return ['registro_integrado' => '1', 'primer_nombre' => 'Ana', 'segundo_nombre' => 'María', 'primer_apellido' => 'Pérez', 'segundo_apellido' => 'López', 'documento_identidad' => 'CI-123', 'sexo' => 'Femenino', 'fecha_nacimiento' => '1995-05-20', 'telefono' => '70012345', 'grado_id' => $grado->id, 'evento_id' => $evento->id, 'cargo' => 'Participante', 'jefe_dojo' => '0', 'invitado_sin_costo' => '0'];
     }
@@ -62,7 +62,7 @@ class InscripcionIntegradaTest extends TestCase
         $primera = Inscripcion::firstOrFail();
         $foto = $primera->persona->foto;
         $this->post(route('inscripciones.pagos.store', $primera), ['monto' => '50', 'fecha' => '2026-01-01'])->assertSessionHasNoErrors();
-        $otro = Evento::create(['nombre' => 'Otro evento', 'fecha_inicio' => '2026-12-05', 'fecha_final' => '2026-12-06', 'lugar' => 'Dojo', 'ciudad' => 'La Paz']);
+        $otro = Evento::create(['nombre' => 'Otro evento', 'fecha_inicio' => '2026-12-05', 'fecha_final' => '2026-12-06', 'lugar' => 'Dojo', 'ciudad' => 'La Paz', 'tipo_cambio' => '6.00']);
         $otro->grados()->attach($data['grado_id'], ['costo' => '300']);
         $data['evento_id'] = $otro->id;
         $data['persona_id'] = $primera->persona_id;
@@ -127,7 +127,9 @@ class InscripcionIntegradaTest extends TestCase
         $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
         $inscripcion = Inscripcion::firstOrFail();
         $this->assertSame($bolivia->id, $inscripcion->persona->pais_id);
-        $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()->assertSeeInOrder(['>Participante</small>', '>Bolivia</small>'], false);
+        $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()
+            ->assertSee('Femenino - CI-123')->assertSeeInOrder(['<span>Participante</span>', '<span>Bolivia</span>'], false)
+            ->assertSee('<th>Organización / Grado</th>', false)->assertDontSee('Documento / Grado');
         $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee('País del participante')
             ->assertSee('value="'.$bolivia->id.'" selected', false);
         $data['persona_id'] = $inscripcion->persona_id;
@@ -138,6 +140,46 @@ class InscripcionIntegradaTest extends TestCase
         $data['pais_id'] = \App\Models\Pais::where('nombre', 'Chile')->value('id');
         $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
         $this->assertSame($data['pais_id'], $inscripcion->persona->fresh()->pais_id);
+    }
+
+    public function test_organization_is_saved_displayed_and_preserved_when_omitted(): void
+    {
+        $data = $this->datos();
+        $data['organizacion'] = 'Shorin Ryu Shorinkan Bolivia';
+        $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
+        $inscripcion = Inscripcion::firstOrFail();
+        $this->assertSame($data['organizacion'], $inscripcion->persona->organizacion);
+        $this->get(route('inscripciones.edit', $inscripcion))->assertOk()->assertSee($data['organizacion']);
+        $this->get('/inscripciones?evento_id='.$data['evento_id'])->assertOk()->assertSee($data['organizacion']);
+        $data['persona_id'] = $inscripcion->persona_id;
+        $data['organizacion'] = str_repeat('a', 256);
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasErrors('organizacion');
+        $this->assertSame('Shorin Ryu Shorinkan Bolivia', $inscripcion->persona->fresh()->organizacion);
+        $data['organizacion'] = 'Otra organización';
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        unset($data['organizacion']);
+        $this->put(route('inscripciones.update', $inscripcion), $data)->assertSessionHasNoErrors();
+        $this->assertSame('Otra organización', $inscripcion->persona->fresh()->organizacion);
+    }
+
+    public function test_organization_backfill_preserves_other_person_data_and_existing_assignment(): void
+    {
+        $data = $this->datos();
+        $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
+        $persona = Persona::firstOrFail();
+        $original = $persona->getAttributes();
+        unset($original['organizacion']);
+        $migration = require database_path('migrations/2026_11_17_000003_add_organizacion_to_personas.php');
+        $migration->asignarOrganizacionInicial();
+        $this->assertSame('Shorin Ryu Shorinkan Bolivia', $persona->fresh()->organizacion);
+        $actual = $persona->fresh()->getAttributes();
+        unset($actual['organizacion']);
+        $this->assertEquals($original, $actual);
+        $this->assertDatabaseCount('inscripciones', 1);
+        Storage::disk('local')->assertExists($persona->foto);
+        $persona->update(['organizacion' => 'Otra organización']);
+        $migration->asignarOrganizacionInicial();
+        $this->assertSame('Otra organización', $persona->fresh()->organizacion);
     }
 
     public function test_country_migration_assigns_bolivia_without_changing_existing_data(): void

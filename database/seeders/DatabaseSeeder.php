@@ -14,6 +14,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(UsuariosSeeder::class);
-        Grado::firstOrCreate(['nombre' => 'Sin grado']);
+        foreach (Grado::DETALLADOS as $nombre) Grado::firstOrCreate(['nombre' => $nombre]);
     }
 }
