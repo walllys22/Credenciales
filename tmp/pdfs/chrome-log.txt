@@ -1,0 +1,3 @@
+[4660:17676:1117/172010.183:ERROR:chrome\installer\util\google_update_settings_win.cc:270] Failed opening key Software\Google\Update\ClientState\{8A69D345-D564-463c-AFF1-A69D9E530F96} to set usagestats; result: 5
+539552 bytes written to file E:/Desarrollo/Credenciales/tmp/pdfs/reporte-qa.pdf
+[4660:16748:1117/172015.241:ERROR:services\device\public\cpp\geolocation\system_geolocation_source_win.cc:251] Failed to get location access status: El parámetro no es correcto. (0x80070057)

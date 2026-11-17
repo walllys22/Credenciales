@@ -200,14 +200,24 @@ El pie del reporte de inscritos usa texto HTML a **12 pt** en ambas líneas
 public/images/Cabecera.png; el pie se compone con texto HTML y líneas negra
 y roja. Los archivos gráficos originales no se modifican. El pie se
 repite con posición fija al imprimir y conserva la reserva inferior del reporte.
-Las líneas roja superior y negra/roja del pie tienen el mismo ancho y los
+El pie se ancla abajo: en pantalla, bottom:10mm dentro de la hoja; al imprimir,
+bottom:0 dentro del área útil, pues @page ya aporta los 10 mm de margen inferior.
+El contenido en pantalla reserva 30 mm abajo para evitar que la tabla invada
+el pie; la reserva repetida de impresión permanece en 26 mm.
+Las líneas negra/roja del pie tienen el mismo ancho y los
 mismos extremos que la tabla. En pantalla usan los márgenes interiores de
-10 mm del reporte; al imprimir ocupan los 195,9 mm útiles del papel Carta.
+10 mm del reporte; al imprimir ocupan los 195,9 mm útiles del papel Carta vertical.
 Cabecera.png ocupa una caja de 38 mm de alto, conserva su proporción mediante
-object-fit:contain y se repite al imprimir. La URL usa un hash SHA-256 para
-reflejar cambios del archivo. La línea roja inferior se conserva por CSS.
+object-fit:contain, alineada arriba con object-position:center top, y se repite
+al imprimir dentro del thead de la tabla, junto al título y las columnas,
+en lugar de depender de una imagen de posición fija. Su caja comienza a
+10 mm del borde superior en pantalla; en impresión se sitúa arriba del área
+útil, con los 10 mm que establece @page.
+La URL usa un hash SHA-256 para
+reflejar cambios del archivo. Se eliminó la línea roja adicional entre la
+cabecera y el título; las líneas que forman parte de Cabecera.png se conservan.
 El título Listado de Inscritos tiene padding superior de 2 mm para separarlo
-de la línea roja, tanto en pantalla como en impresión.
+de la cabecera, tanto en pantalla como en impresión.
 
 `Evento` relaciona grados con pivot costo (Bs) y costo_usd; tipo_cambio pertenece
 al evento. El formulario captura dólares y calcula bolivianos con BigDecimal.
@@ -252,6 +262,160 @@ Importes y tipo de cambio no registrados se señalan explícitamente; no se
 deduce una cotización de mercado ni se reconvierten datos históricos por suposición.
 
 ## Registro y listado unificados (17/11/2026)
+
+### 17/11/2026: hojas de vista previa, navegación flotante y cabecera repetida
+
+La cabecera Cabecera.png se trasladó al encabezado thead del reporte, en flujo
+normal, para que el navegador la repita en todas las páginas junto con el título
+y los encabezados. El pie impreso sigue fijo y se mantiene Carta vertical,
+márgenes de 1 cm y la numeración de impresión. Esta solución reemplaza la imagen
+fija anterior, que el usuario indicó que faltaba en la segunda hoja impresa.
+
+public/js/reporte-paginas.js crea hojas de vista previa midiendo encabezados,
+filas y resumen de totales al cargar fuentes e imagen. Conserva cada fila
+completa y el bloque de totales sólo en la última hoja; si no cabe, pasa junto
+a otra. Recalcula al cambiar el ancho. Los botones flotantes Anterior/Siguiente
+y el indicador Página X de Y aparecen sólo si la vista tiene más de una hoja,
+se deshabilitan en los extremos y permiten desplazarse entre hojas. Respeta
+la preferencia de movimiento reducido y actualiza el indicador al desplazarse.
+La vista previa y los botones se ocultan al imprimir: se imprime una sola
+tabla original con encabezados repetidos, sin duplicar participantes ni totales.
+Si no carga JavaScript, el listado original permanece disponible.
+
+Archivos: resources/views/inscripciones/imprimir.blade.php,
+public/css/inscripciones-imprimir.css, public/js/reporte-paginas.js y
+tests/JavaScript/reporte-paginas.test.cjs. Pruebas nuevas de una hoja, varias
+hojas sin duplicar filas, totales juntos y filas sobredimensionadas. La cantidad
+de hojas de pantalla puede diferir del resultado del controlador de impresión
+si se cambia escala, fuentes, papel o ancho de vista. No se pudo verificar
+visualmente el resultado con el intento headless de Edge (no devolvió DOM);
+queda sin comprobación física la repetición en la impresora del usuario.
+
+### 17/11/2026: default.jpg seleccionado y guardado en Nueva inscripción
+
+Se precarga default.jpg como archivo en el input de foto, no sólo como imagen
+de vista previa. No reemplaza una foto elegida por el usuario mientras descarga
+la predeterminada y no precarga fotos al editar participantes existentes.
+InscripcionController guarda la predeterminada cuando el participante es nuevo
+y no llega otro archivo; el guardado conserva la transacción y su limpieza.
+DatosPersona permite esa alternativa en el registro integrado. Las fotos
+personalizadas mantienen su validación y las existentes se conservan al editar.
+Archivos: datos.blade.php, inscripciones/form.blade.php, public/js/personas.js,
+DatosPersona.php, InscripcionController.php y pruebas integradas/JavaScript de
+foto predeterminada. Esta indicación sustituye el comportamiento anterior de
+imagen de ejemplo sin archivo adjunto. No se modificaron participantes existentes.
+
+### 17/11/2026: resumen de deuda y jerarquía de texto del reporte
+
+Debajo de Pagado Bs.- y Pagado $us.- se muestran participantes con deuda,
+deuda pendiente total en Bs, equivalente en dólares y tipo de cambio utilizado.
+Se cuentan personas distintas con saldo positivo y se suman sólo saldos
+pendientes, descontados pagos y descuentos. Para varios eventos, se convierte
+el subtotal de deuda de cada evento con su propio tipo de cambio y se listan
+las cotizaciones; no se divide toda la deuda por una cotización arbitraria.
+Si falta un tipo de cambio necesario, el total en Bs sigue disponible y el
+equivalente USD indica Sin tipo de cambio. El resumen se conserva junto al
+resto de totales en la última hoja de la vista previa.
+
+La columna Número pasa de 5 % a 6 % de ancho, con texto 9,5 pt y sin salto en
+N.º. El nombre del participante usa 10 pt y la organización 7 pt en la línea
+inferior. Se mantiene la distribución de siete columnas, colores y monedas.
+Archivos: InscripcionController.php, inscripciones/imprimir.blade.php,
+public/css/inscripciones-imprimir.css y tests/Feature/InscripcionesImprimirTest.php.
+
+Verificaciones conjuntas nuevas: **20 pruebas PHP aprobadas / 250 aserciones**
+(reporte, inscripción integrada y fotos), **16 pruebas JavaScript aprobadas**.
+Incluyen foto predeterminada persistida, conservación al editar, prioridad de
+foto personal durante la descarga, partición de filas/totales, deudas con
+pagos mixtos, descuentos, invitados, tipos de cambio distintos y cotización
+ausente. Después de ajustar fuentes, compilación/limpieza Blade y
+git diff --check correctos. Sin inspección visual interactiva ni impresión física.
+
+### 17/11/2026: cambio de orientación del reporte a vertical
+
+Por nueva indicación del usuario, Carta vertical sustituye la orientación
+horizontal anterior. Se ajustó @page a letter portrait, la hoja de vista
+previa a 215,9 × 279,4 mm y el ancho imprimible de cabecera/pie a 195,9 mm.
+Se mantienen los márgenes de 10 mm en los cuatro lados y «Página X de Y»
+en la esquina inferior derecha con los contadores de página y total.
+Archivos: public/css/inscripciones-imprimir.css y certificado.md.
+Verificaciones nuevas: **3 pruebas del reporte aprobadas / 36 aserciones**;
+compilación/limpieza Blade y git diff --check correctos. Sin prueba física ni
+revisión interactiva del diálogo de impresión; no se repitió la suite completa
+por ser un cambio de dimensiones CSS. Credenciales y certificados conservan
+sus configuraciones de impresión independientes.
+
+### 17/11/2026: invitados en rojo claro y organización bajo el nombre
+
+En el reporte se resalta toda la fila de invitados sin costo con fondo rojo
+claro #f8d7da, conservado al imprimir. El rojo tiene prioridad sobre el amarillo
+de saldos liquidados, incluso si el invitado conserva pagos anteriores.
+La organización se muestra debajo del nombre del participante y se retiró
+la columna Cargo sólo del reporte. Se redistribuyó su ancho a Nombre completo
+y se ajustaron los colspan de título, totales, pie y estado vacío a siete
+columnas. Sin costo mantiene su celda combinada de tres columnas. Cargo
+permanece guardado y disponible en los demás módulos.
+Archivos: resources/views/inscripciones/imprimir.blade.php,
+public/css/inscripciones-imprimir.css y certificado.md.
+Verificaciones nuevas tras ambos ajustes: **4 pruebas aprobadas / 71 aserciones**
+del reporte y gratuidad; compilación/limpieza Blade y git diff --check correctos.
+Sin inspección visual interactiva ni impresión física; sin nuevas pruebas de
+estilo ni suite completa por ser presentación, sin cambios de datos o cobros.
+
+### 17/11/2026: configuración de página y numeración del reporte
+
+El reporte de inscritos configura @page con size:letter portrait y margin:10mm:
+hoja Carta vertical de 215,9 × 279,4 mm y 1 cm de margen en cada lado.
+La vista de hoja en pantalla usa esas dimensiones; la cabecera y el pie de
+impresión ocupan los 195,9 mm de ancho útil, conservando su alineación con
+la tabla. Las reservas de cabecera y pie y los saltos entre filas se mantienen.
+La esquina inferior derecha usa @bottom-right con «Página X de Y», mediante
+counter(page) y counter(pages), que representan la página actual y el total
+calculado al imprimir; no son números fijos ni contadores de elementos HTML.
+
+Esta numeración requiere soporte de cajas de margen de CSS paginado (Chrome
+131 o posterior). Referencia técnica oficial consultada:
+https://developer.chrome.com/blog/print-margins?hl=es-419.
+Si el diálogo/controlador impone otro tamaño, orientación, escala o márgenes,
+puede reemplazar los valores CSS. La configuración solicitada corresponde al
+reporte; no cambia la impresión de credenciales ni certificados.
+Archivos: public/css/inscripciones-imprimir.css y certificado.md.
+
+Verificaciones de esta configuración: **3 pruebas del reporte aprobadas / 36
+aserciones**; compilación y limpieza Blade correctas; git diff --check sin
+errores. Se revisaron las dimensiones y las reglas de margen/numeración CSS.
+Sin prueba física ni revisión interactiva de la vista previa de impresión;
+el número final de páginas y su representación en el controlador de impresora
+no se comprobaron en esta tarea. No se repitió la suite completa porque no
+se modificaron datos, cálculos ni controladores.
+
+### 17/11/2026: cabecera y pie a 1 cm de los bordes de la hoja
+
+Se ancló el pie al borde inferior con margen de 10 mm en pantalla, en lugar
+de usar una posición superior fija. En impresión usa bottom:0 dentro del
+área útil: el margen inferior de 10 mm lo aporta @page, evitando duplicarlo.
+Se mantiene la reserva de 26 mm en cada página y se reservan 30 mm abajo en
+pantalla para evitar superposición del listado y el pie.
+La imagen Cabecera.png se alinea arriba en su caja, retirando el espacio
+vertical que añadía el centrado de object-fit. La caja tiene top:10mm en
+pantalla y top:0 del área imprimible, cuyo margen superior es 10 mm.
+Archivos: public/css/inscripciones-imprimir.css y certificado.md.
+Verificación nueva: compilación y limpieza Blade correctas y git diff --check
+sin errores. Sin nuevas pruebas automatizadas por tratarse de posiciones CSS;
+sin inspección visual interactiva ni prueba física de impresión. Los márgenes
+físicos finales dependen de respetar la configuración de papel Carta y CSS
+en el diálogo/controlador de impresión.
+
+### 17/11/2026: retirada de la línea roja bajo la cabecera del reporte
+
+Se eliminó la línea roja adicional entre Cabecera.png y Listado de Inscritos,
+retirando su elemento HTML y sus reglas CSS de pantalla e impresión. Se
+mantienen la imagen original, las líneas del pie y el espacio superior del
+título. Archivos: resources/views/inscripciones/imprimir.blade.php,
+public/css/inscripciones-imprimir.css y certificado.md.
+Verificación nueva: compilación y limpieza Blade correctas; git diff --check
+sin errores. Sin nuevas pruebas automatizadas ni suite completa por tratarse
+de eliminar un elemento decorativo; sin inspección visual interactiva.
 
 ### 17/11/2026: columna Fechas sin etiqueta de estado
 
@@ -459,12 +623,15 @@ Nueva inscripción comienza directamente en Datos personales: se retiraron el
 selector Cargar participante existente y su texto de ayuda. El identificador
 persona_id permanece oculto para edición y compatibilidad con enlaces que
 carguen un participante existente; sin ese contexto, el alta crea uno nuevo.
-Al abrir Nueva inscripción, la vista previa inicial usa public/images/default.jpg.
-La misma imagen se restaura al limpiar la selección del archivo o volver a
-un participante nuevo. Es una imagen de vista previa; no se guarda como foto
-del participante. Las personas existentes conservan su foto al editar.
-La foto es obligatoria para participantes nuevos; al editar o reutilizar se
-conserva si no se envía otra. Los datos personales y la foto son compartidos
+Al abrir Nueva inscripción, public/images/default.jpg se carga como archivo
+seleccionado mediante fetch, File y DataTransfer, además de la vista previa.
+Se puede sustituir por una foto personal. El servidor guarda una copia de la
+imagen predeterminada si el nuevo participante no adjunta otra, incluso si
+falla la precarga en el navegador. Se guarda con ruta propia en el disco local
+y se elimina en caso de reversión de la transacción. Las fotos existentes se
+conservan al editar sin adjuntar otra. La foto cargada se valida como imagen,
+con el límite y las dimensiones anteriores. El formulario antiguo de Personas
+conserva su requisito de foto al crear. Los datos personales y la foto son compartidos
 por las inscripciones de la misma persona; el formulario de edición lo indica.
 Se mantiene bloqueado el cambio de grado de personas inscritas para proteger
 sus tarifas históricas y el cambio de persona desde la edición integrada.
@@ -533,8 +700,13 @@ el botón y los datos adicionales del modal no se envían a ese rol.
 
 ### Invitados sin costo
 
-En el reporte impreso, un invitado muestra su cargo en una sola línea y una
-celda centrada «Sin costo» que ocupa Costo, Pagado y Saldo (colspan 3). Se
+El reporte muestra la organización debajo del nombre del participante y ya
+no incluye la columna Cargo; tiene siete columnas. Si no tiene organización,
+indica Sin organización registrada. Un invitado tiene la fila completa
+de fondo rojo claro (#f8d7da), también en pantalla. Tiene
+prioridad sobre el amarillo de los pagos con saldo cero, aunque conserve
+pagos anteriores. Los otros participantes liquidados mantienen el amarillo.
+La celda centrada «Sin costo» ocupa Costo, Pagado y Saldo (colspan 3). Se
 omite allí la observación automática «invitado sin costo» y los importes cero.
 El listado administrativo y el modal conservan sus datos y observaciones.
 

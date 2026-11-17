@@ -1,0 +1,20 @@
+<?php
+require __DIR__.'/../../vendor/autoload.php';
+$app = require __DIR__.'/../../bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$request=Illuminate\Http\Request::create('http://127.0.0.1:8000/inscripciones/imprimir?evento_id=1');
+$request->setLaravelSession(app('session')->driver());
+app()->instance('request',$request);
+auth()->setUser(App\Models\User::where('role','superadmin')->firstOrFail());
+view()->share('errors',new Illuminate\Support\ViewErrorBag());
+$data=app(App\Http\Controllers\InscripcionController::class)->imprimir($request)->getData();
+$original=$data['inscripciones'];
+$expanded=collect();
+for($i=0;$i<60;$i++) $expanded->push(clone $original[$i % $original->count()]);
+$data['inscripciones']=$expanded;
+$html=view('inscripciones.imprimir',$data)->render();
+$html=str_replace(rtrim(asset('/'),'/').'/', 'file:///E:/Desarrollo/Credenciales/public/', $html);
+$qa='<script>window.addEventListener("load",async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));window.prepararHojasReporte?.();const p=[...document.querySelectorAll(".report-preview-page")];const r={pages:p.length,rows:p.reduce((n,x)=>n+x.querySelector(".report-participants").rows.length,0),headers:p.filter(x=>x.querySelector(".report-letterhead")).length,footers:p.filter(x=>x.querySelector(".report-letterhead-footer")).length,navVisible:!document.getElementById("report-page-navigation").hidden};document.getElementById("report-next-page").click();r.afterNext=document.getElementById("report-page-status").textContent;document.getElementById("report-previous-page").click();r.afterPrevious=document.getElementById("report-page-status").textContent;document.body.dataset.qaResult=JSON.stringify(r);});</script>';
+$html=str_replace('</body>',$qa.'</body>',$html);
+file_put_contents(__DIR__.'/report-actual.html',$html);
+echo 'Prepared 60-row report with current Blade and CSS'.PHP_EOL;

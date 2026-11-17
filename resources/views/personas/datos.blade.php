@@ -1,14 +1,15 @@
 <div class="form-section-heading"><span class="step-number">01</span><div><h2>Datos personales</h2><p>Los campos con * son obligatorios.</p></div></div>
 <div class="row">
 <div class="col-12 mb-4">
-    <label for="foto" class="form-label">Foto de la persona @if(!$persona->exists)<span class="required">*</span>@endif</label>
+    @php($fotoPredeterminada = isset($inscripcion) && !$persona->exists)
+    <label for="foto" class="form-label">Foto de la persona @if(!$persona->exists && !$fotoPredeterminada)<span class="required">*</span>@endif</label>
     <div class="person-photo-upload">
         @php($fotoInicial = $persona->exists ? $persona->foto_url : asset('images/default.jpg'))
         <img id="foto-preview" src="{{ $fotoInicial }}" alt="Vista previa de la foto" width="130" height="150" data-original="{{ $fotoInicial }}">
         <div class="flex-grow-1">
-            <input type="file" id="foto" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/jpeg,image/png,image/webp,image/gif" @required(!$persona->exists) aria-describedby="foto-help" @error('foto') aria-invalid="true" @enderror>
+            <input type="file" id="foto" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/jpeg,image/png,image/webp,image/gif" @if($fotoPredeterminada) data-default-file="{{ asset('images/default.jpg') }}" @endif @required(!$persona->exists && !$fotoPredeterminada) aria-describedby="foto-help" @error('foto') aria-invalid="true" @enderror>
             @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            <p class="form-text" id="foto-help">JPG, PNG, WEBP o GIF. Peso máximo: 5 MB. Dimensiones máximas: 6000 × 6000 píxeles.@if($persona->exists) Si no seleccionas otra foto, se conserva la actual.@endif</p>
+            <p class="form-text" id="foto-help">JPG, PNG, WEBP o GIF. Peso máximo: 5 MB. Dimensiones máximas: 6000 × 6000 píxeles.@if($persona->exists) Si no seleccionas otra foto, se conserva la actual.@elseif($fotoPredeterminada) Se usará default.jpg si no seleccionas otra foto.@endif</p>
             <p id="foto-client-error" class="text-danger small" role="alert" hidden></p>
         </div>
     </div>

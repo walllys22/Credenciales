@@ -57,6 +57,18 @@ class InscripcionIntegradaTest extends TestCase
         $this->assertSame('invitado sin costo', Inscripcion::firstOrFail()->observaciones);
     }
 
+    public function test_new_registration_stores_default_photo_when_no_replacement_is_uploaded(): void
+    {
+        $data = $this->datos();
+        $this->get('/inscripciones/create')->assertOk()->assertSee('data-default-file=', false)->assertSee('images/default.jpg', false);
+        $this->post('/inscripciones', $data)->assertRedirect('/inscripciones')->assertSessionHasNoErrors();
+        $persona = Persona::firstOrFail();
+        Storage::disk('local')->assertExists($persona->foto);
+        $this->assertSame(file_get_contents(public_path('images/default.jpg')), Storage::disk('local')->get($persona->foto));
+        $this->put(route('inscripciones.update', Inscripcion::firstOrFail()), $data + ['persona_id' => $persona->id])->assertSessionHasNoErrors();
+        $this->assertSame($persona->foto, $persona->fresh()->foto);
+    }
+
     public function test_existing_participant_can_join_another_event_without_losing_photo_or_payments(): void
     {
         $data = $this->datos();
@@ -110,7 +122,7 @@ class InscripcionIntegradaTest extends TestCase
     public function test_invalid_person_data_and_duplicate_document_do_not_create_registrations(): void
     {
         $data = $this->datos();
-        $this->post('/inscripciones', $data)->assertSessionHasErrors('foto');
+        $this->post('/inscripciones', array_merge($data, ['primer_nombre' => '']))->assertSessionHasErrors('primer_nombre');
         $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->create('foto.txt')])->assertSessionHasErrors('foto');
         $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('foto.jpg')])->assertSessionHasNoErrors();
         $this->post('/inscripciones', $data + ['foto' => UploadedFile::fake()->image('duplicada.jpg')])->assertSessionHasErrors('documento_identidad');

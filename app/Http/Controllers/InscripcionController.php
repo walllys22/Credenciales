@@ -47,7 +47,27 @@ class InscripcionController extends Controller
         $totalPagadoBs = (string) BigDecimal::of((string) ($totales->bolivianos ?? 0))->toScale(2, RoundingMode::HalfUp);
         $totalPagadoUsd = (string) BigDecimal::of((string) ($totales->dolares ?? 0))->toScale(2, RoundingMode::HalfUp);
 
-        return view('inscripciones.imprimir', compact('inscripciones', 'totalPagadoBs', 'totalPagadoUsd'));
+        $pendientes = $inscripciones->filter(fn ($inscripcion) => BigDecimal::of($inscripcion->saldo_pendiente)->isPositive());
+        $participantesConDeuda = $pendientes->unique('persona_id')->count();
+        $deudaBs = BigDecimal::zero();
+        $deudaUsd = BigDecimal::zero();
+        $conversionCompleta = true;
+        foreach ($pendientes->groupBy('evento_id') as $grupo) {
+            $subtotal = BigDecimal::zero();
+            foreach ($grupo as $inscripcion) $subtotal = $subtotal->plus($inscripcion->saldo_pendiente);
+            $deudaBs = $deudaBs->plus($subtotal);
+            $tipoCambio = $grupo->first()->evento->tipo_cambio;
+            if ($tipoCambio && BigDecimal::of($tipoCambio)->isPositive()) {
+                $deudaUsd = $deudaUsd->plus($subtotal->dividedBy($tipoCambio, 12, RoundingMode::HalfUp));
+            } else {
+                $conversionCompleta = false;
+            }
+        }
+        $deudaTotalBs = (string) $deudaBs->toScale(2, RoundingMode::HalfUp);
+        $deudaTotalUsd = $conversionCompleta ? (string) $deudaUsd->toScale(2, RoundingMode::HalfUp) : null;
+        $tiposCambioReporte = $eventoId ? Evento::whereKey($eventoId)->get() : $inscripciones->pluck('evento')->unique('id')->values();
+
+        return view('inscripciones.imprimir', compact('inscripciones', 'totalPagadoBs', 'totalPagadoUsd', 'participantesConDeuda', 'deudaTotalBs', 'deudaTotalUsd', 'tiposCambioReporte'));
     }
 
     private function calcularTotales(Inscripcion $inscripcion): void
@@ -139,8 +159,10 @@ class InscripcionController extends Controller
                 if ($persona->exists) $persona = Persona::whereKey($persona->id)->lockForUpdate()->firstOrFail();
                 $data = DatosPersona::validated($request, $persona->exists ? $persona : null);
                 unset($data['foto']);
-                if ($request->hasFile('foto')) {
-                    $fotoNueva = $request->file('foto')->store('personas', 'local');
+                $archivoFoto = $request->file('foto');
+                if (!$persona->exists && !$archivoFoto) $archivoFoto = new \Illuminate\Http\File(public_path('images/default.jpg'));
+                if ($archivoFoto) {
+                    $fotoNueva = Storage::disk('local')->putFile('personas', $archivoFoto);
                     if (!$fotoNueva) throw new \RuntimeException('No se pudo guardar la foto.');
                     $data['foto'] = $fotoNueva;
                 }

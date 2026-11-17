@@ -20,7 +20,7 @@ class DatosPersona
             'grado_id' => ['required', $request->boolean('registro_integrado') ? Rule::exists('grados', 'id')->whereIn('nombre', Grado::DETALLADOS) : 'exists:grados,id'],
             'pais_id' => 'sometimes|nullable|exists:paises,id',
             'organizacion' => 'sometimes|nullable|string|max:255',
-            'foto' => [$persona ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
+            'foto' => [$persona || $request->boolean('registro_integrado') ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
         ]);
         if ($persona && $persona->grado_id != $data['grado_id'] && $persona->inscripciones()->exists()) {
             $nuevo = Grado::findOrFail($data['grado_id']);

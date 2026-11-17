@@ -58,4 +58,35 @@ class InscripcionesImprimirTest extends TestCase
             ->assertViewHas('totalPagadoBs', '0.00')->assertViewHas('totalPagadoUsd', '0.00')
             ->assertSeeInOrder(['Pagado Bs.-', '0.00', 'Pagado $us.-', '0.00']);
     }
+
+    public function test_report_sums_only_pending_balances_and_converts_with_each_event_rate(): void
+    {
+        $grado = Grado::create(['nombre' => 'Dan']);
+        $evento = Evento::create(['nombre' => 'Seminario', 'fecha_inicio' => '2026-12-02', 'fecha_final' => '2026-12-05', 'lugar' => 'Dojo', 'ciudad' => 'Trinidad', 'tipo_cambio' => '10.00']);
+        $evento->grados()->attach($grado, ['costo' => '100']);
+        $inscritos = [];
+        foreach (['Parcial', 'Liquidado', 'Invitado', 'Pendiente'] as $nombre) {
+            $persona = Persona::create(['primer_nombre' => $nombre, 'primer_apellido' => 'Prueba', 'sexo' => 'Masculino', 'grado_id' => $grado->id]);
+            $inscritos[] = Inscripcion::create(['persona_id' => $persona->id, 'evento_id' => $evento->id, 'cargo' => 'Participante', 'invitado_sin_costo' => $nombre === 'Invitado']);
+        }
+        $inscritos[0]->pagos()->create(['monto' => '20', 'fecha' => '2026-01-01']);
+        $inscritos[0]->pagos()->create(['monto' => '20', 'monto_original' => '2', 'moneda' => 'USD', 'tipo_cambio' => '10', 'fecha' => '2026-01-02']);
+        $inscritos[1]->pagos()->create(['monto' => '80', 'descuento' => '20', 'pago_total' => true, 'fecha' => '2026-01-01']);
+        $url = route('inscripciones.imprimir', ['evento_id' => $evento->id]);
+        $this->get($url)->assertOk()->assertViewHas('participantesConDeuda', 2)
+            ->assertViewHas('deudaTotalBs', '160.00')->assertViewHas('deudaTotalUsd', '16.00')
+            ->assertSeeInOrder(['Pagado $us.-', 'Participantes con deuda', 'Deuda pendiente Bs.-', 'Deuda pendiente $us.-', 'Tipo de cambio'])
+            ->assertSee('Bs 10,00 por 1 $us');
+        $otro = $evento->replicate();
+        $otro->nombre = 'Otro seminario';
+        $otro->tipo_cambio = '20.00';
+        $otro->save();
+        $otro->grados()->attach($grado, ['costo' => '200']);
+        Inscripcion::create(['persona_id' => $inscritos[0]->persona_id, 'evento_id' => $otro->id, 'cargo' => 'Participante']);
+        $this->get(route('inscripciones.imprimir'))->assertOk()->assertViewHas('participantesConDeuda', 2)
+            ->assertViewHas('deudaTotalBs', '360.00')->assertViewHas('deudaTotalUsd', '26.00');
+        $evento->update(['tipo_cambio' => null]);
+        $this->get($url)->assertOk()->assertViewHas('deudaTotalBs', '160.00')->assertViewHas('deudaTotalUsd', null)
+            ->assertSee('Sin tipo de cambio');
+    }
 }

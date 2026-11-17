@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         foto.value = '';
         foto.setCustomValidity('');
         document.getElementById('foto-client-error').hidden = true;
-        foto.required = !opcion;
+        foto.required = !opcion && !foto.dataset.defaultFile;
         preview.src = opcion?.foto_url || '{{ asset('images/default.jpg') }}';
         preview.dataset.original = preview.src;
         actualizarTarifa();
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     grado.addEventListener('change', actualizarTarifa);
     jefeDojo.addEventListener('change', actualizarTarifa);
     invitado.addEventListener('change', actualizarTarifa);
-    foto.required = !persona.value;
+    foto.required = !persona.value && !foto.dataset.defaultFile;
     actualizarTarifa();
 });
 </script>
