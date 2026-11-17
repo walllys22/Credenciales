@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/app.css?v=1793737882">
     <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/dashboard.css?v=1794940670">
     <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/notificaciones.css?v=1794193449">
-    <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/inscripciones-imprimir.css?v=1794950310">
+    <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/inscripciones-imprimir.css?v=1794951253">
     <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/grados.css?v=1794940914">
-    <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/botones.css?v=1794941937">
+    <link rel="stylesheet" href="file:///E:/Desarrollo/Credenciales/public/css/botones.css?v=1794951089">
 </head>
 <body>
 <div id="app-notifications" class="app-notifications" aria-live="polite" aria-atomic="false">
@@ -71,16 +71,16 @@
             <div class="page-heading"><div><h1><span class="heading-icon"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
 </svg>
- </span>Personas inscritas</h1></div><div class="page-actions">    <button type="button" class="btn btn-create btn-project" id="print-registrations" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
+ </span>Personas inscritas</h1></div><div class="page-actions">    <a href="file:///E:/Desarrollo/Credenciales/public/inscripciones/pdf?evento_id=1" class="btn btn-project" data-action-style="pdf" aria-label="Descargar PDF" title="Descargar PDF"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i><span class="button-label">PDF</span></a>
+    <button type="button" class="btn btn-create btn-project" id="print-registrations" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
     <a href="file:///E:/Desarrollo/Credenciales/public/inscripciones" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 </div></div>
             <section class="panel registrations-report" id="report-source">
-    <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
+    <div class="report-page-header"><img class="report-letterhead" src="file:///E:/Desarrollo/Credenciales/public/images/Cabecera.png?v=97c7905df4ba96a487958709117ac33b988a09d17d6c237c2dc598d98d9fc040" alt="" aria-hidden="true"><h2>Listado de Inscritos</h2></div>
     <div class="table-responsive">
         <table class="table align-middle">
             <colgroup><col class="report-col-number"><col class="report-col-name"><col class="report-col-document"><col class="report-col-grade"><col class="report-col-money"><col class="report-col-money"><col class="report-col-money"></colgroup>
             <thead>
-                <tr class="report-print-heading"><th colspan="7"><img class="report-letterhead" src="file:///E:/Desarrollo/Credenciales/public/images/Cabecera.png?v=97c7905df4ba96a487958709117ac33b988a09d17d6c237c2dc598d98d9fc040" alt="" aria-hidden="true"><h2>Listado de Inscritos</h2></th></tr>
                 <tr><th class="report-number">N.º</th><th>Nombre completo</th><th>Documento</th><th>Grado</th><th>Costo</th><th>Pagado</th><th>Saldo</th></tr>
             </thead>
             <tbody class="report-participants">
@@ -750,6 +750,7 @@
             <tfoot class="report-print-footer"><tr><td colspan="7"></td></tr></tfoot>
         </table>
     </div>
+    <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
 </section>
 <div id="report-preview-pages" class="report-preview-pages" hidden></div>
 <nav id="report-page-navigation" class="report-page-navigation" aria-label="Páginas del reporte" hidden>
@@ -768,7 +769,7 @@
 <script src="file:///E:/Desarrollo/Credenciales/public/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="file:///E:/Desarrollo/Credenciales/public/js/modal-colores.js?v=1794941863" defer></script>
 <script src="file:///E:/Desarrollo/Credenciales/public/js/app.js?v=1794193451" defer></script>
-<script src="file:///E:/Desarrollo/Credenciales/public/js/reporte-paginas.js?v=1794950164" defer></script>
+<script src="file:///E:/Desarrollo/Credenciales/public/js/reporte-paginas.js?v=1794951294" defer></script>
 <script>
     // Abre la impresión después de revisar el listado completo.
     document.getElementById('print-registrations').addEventListener('click', async () => {
@@ -779,6 +780,7 @@
             await letterhead.decode();
             await document.fonts?.ready;
             window.prepararHojasReporte?.();
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             window.print();
         } catch (error) {
             window.showAppMessage('No se pudo cargar la cabecera. Recarga la página antes de imprimir.');
@@ -787,5 +789,5 @@
         }
     });
 </script>
-<script>window.addEventListener("load",async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));window.prepararHojasReporte?.();const p=[...document.querySelectorAll(".report-preview-page")];const r={pages:p.length,rows:p.reduce((n,x)=>n+x.querySelector(".report-participants").rows.length,0),headers:p.filter(x=>x.querySelector(".report-letterhead")).length,footers:p.filter(x=>x.querySelector(".report-letterhead-footer")).length,navVisible:!document.getElementById("report-page-navigation").hidden};document.getElementById("report-next-page").click();r.afterNext=document.getElementById("report-page-status").textContent;document.getElementById("report-previous-page").click();r.afterPrevious=document.getElementById("report-page-status").textContent;document.body.dataset.qaResult=JSON.stringify(r);});</script></body>
+</body>
 </html>

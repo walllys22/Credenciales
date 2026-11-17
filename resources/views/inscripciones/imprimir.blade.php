@@ -3,17 +3,17 @@
 @section('section', 'Inscripción / Imprimir')
 @section('title', 'Personas inscritas')
 @section('actions')
+    <a href="{{ route('inscripciones.pdf', request()->only('evento_id')) }}" class="btn btn-project" data-action-style="pdf" aria-label="Descargar PDF" title="Descargar PDF"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i><span class="button-label">PDF</span></a>
     <button type="button" class="btn btn-create btn-project" id="print-registrations" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></button>
     <a href="{{ route('inscripciones.index') }}" class="btn btn-close-page btn-project" data-action-style="close" aria-label="Cerrar" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="button-label">Cerrar</span></a>
 @endsection
 @section('content')
 <section class="panel registrations-report" id="report-source">
-    <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
+    <div class="report-page-header"><img class="report-letterhead" src="{{ asset('images/Cabecera.png') }}?v={{ hash_file('sha256', public_path('images/Cabecera.png')) }}" alt="" aria-hidden="true"><h2>Listado de Inscritos</h2></div>
     <div class="table-responsive">
         <table class="table align-middle">
             <colgroup><col class="report-col-number"><col class="report-col-name"><col class="report-col-document"><col class="report-col-grade"><col class="report-col-money"><col class="report-col-money"><col class="report-col-money"></colgroup>
             <thead>
-                <tr class="report-print-heading"><th colspan="7"><img class="report-letterhead" src="{{ asset('images/Cabecera.png') }}?v={{ hash_file('sha256', public_path('images/Cabecera.png')) }}" alt="" aria-hidden="true"><h2>Listado de Inscritos</h2></th></tr>
                 <tr><th class="report-number">N.º</th><th>Nombre completo</th><th>Documento</th><th>Grado</th><th>Costo</th><th>Pagado</th><th>Saldo</th></tr>
             </thead>
             <tbody class="report-participants">
@@ -59,6 +59,7 @@
             <tfoot class="report-print-footer"><tr><td colspan="7"></td></tr></tfoot>
         </table>
     </div>
+    <div class="report-letterhead-footer"><div>SEMINARIO INTERNACIONAL DE KARATE <span>&amp;</span> KOBUDO</div><div class="report-footer-country">BOLIVIA 2026</div></div>
 </section>
 <div id="report-preview-pages" class="report-preview-pages" hidden></div>
 <nav id="report-page-navigation" class="report-page-navigation" aria-label="Páginas del reporte" hidden>
@@ -82,6 +83,7 @@
             await letterhead.decode();
             await document.fonts?.ready;
             window.prepararHojasReporte?.();
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             window.print();
         } catch (error) {
             window.showAppMessage('No se pudo cargar la cabecera. Recarga la página antes de imprimir.');

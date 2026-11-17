@@ -35,6 +35,7 @@ Route::middleware(['auth', ProjectAccess::class])->group(function () {
     Route::get('/personas/{persona}/credencial', [CredencialController::class, 'show'])->name('personas.credencial');
     Route::resource('eventos', EventoController::class)->except('show');
     Route::get('/inscripciones/imprimir', [InscripcionController::class, 'imprimir'])->name('inscripciones.imprimir');
+    Route::get('/inscripciones/pdf', [InscripcionController::class, 'pdf'])->name('inscripciones.pdf');
     Route::get('/inscripciones/{inscripcion}/pagos', [PagoController::class, 'create'])->name('inscripciones.pagos.create');
     Route::post('/inscripciones/{inscripcion}/pagos', [PagoController::class, 'store'])->name('inscripciones.pagos.store');
     Route::delete('/inscripciones/{inscripcion}/pagos/{pago}', [PagoController::class, 'destroy'])->name('inscripciones.pagos.destroy');

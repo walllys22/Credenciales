@@ -1,10 +1,10 @@
 (() => {
     // Mantiene filas completas y coloca los totales sólo en la última hoja.
-    function agruparFilas(alturas, espacio, alturaTotales) {
+    function agruparFilas(alturas, espacio, alturaTotales, limite = 15) {
         const paginas = [{ filas: [], totales: false }];
         let usada = 0;
         alturas.forEach((altura, indice) => {
-            if (paginas.at(-1).filas.length && usada + altura > espacio) {
+            if (paginas.at(-1).filas.length && (usada + altura > espacio || paginas.at(-1).filas.length >= limite)) {
                 paginas.push({ filas: [], totales: false });
                 usada = 0;
             }
@@ -55,15 +55,16 @@
             actualizarControles();
         }
 
-        function crearVista(paraImprimir = false) {
-            if (window.matchMedia('print').matches && !paraImprimir) return;
+        function crearVista() {
+            // No sustituir nodos durante beforeprint: Chrome puede omitir su pintura.
+            if (window.matchMedia('print').matches) return;
             source.classList.remove('report-source-with-preview');
             const rows = [...source.querySelector('.report-participants').rows];
             const totals = source.querySelector('.report-payment-totals');
-            const headerHeight = source.querySelector('thead').getBoundingClientRect().height;
+            const headerHeight = source.querySelector('.report-page-header').getBoundingClientRect().height + source.querySelector('thead').getBoundingClientRect().height;
             const pxPerMm = 96 / 25.4;
-            // Carta: 279.4 mm, márgenes 10+10 mm y 26 mm reservados al pie.
-            const available = Math.max(1, (279.4 - 20 - 26) * pxPerMm - headerHeight - 4);
+            // Carta: 279.4 mm, márgenes 10+10 mm y 18 mm reservados al pie.
+            const available = Math.max(1, (279.4 - 20 - 18) * pxPerMm - headerHeight - 4);
             const groups = agruparFilas(rows.map(row => row.getBoundingClientRect().height), available, totals.getBoundingClientRect().height);
             const fragment = document.createDocumentFragment();
             pages = groups.map((group, index) => {
@@ -72,6 +73,9 @@
                 page.classList.add('report-preview-page');
                 page.setAttribute('aria-label', `Página ${index + 1} de ${groups.length}`);
                 page.querySelector('.report-participants').replaceChildren(...group.filas.map(row => rows[row].cloneNode(true)));
+                if (group.filas.length === 15 && !group.totales) {
+                    [...page.querySelector('.report-participants').rows].forEach(row => { row.style.height = `${available / 15}px`; });
+                }
                 if (!group.totales) page.querySelector('.report-payment-totals').remove();
                 page.querySelector('.report-print-footer').remove();
                 fragment.append(page);
@@ -103,7 +107,6 @@
             resizeTimer = window.setTimeout(crearVista, 120);
         }
         window.addEventListener('resize', reprogramar);
-        window.addEventListener('beforeprint', () => crearVista(true));
         window.addEventListener('afterprint', reprogramar);
         await document.fonts?.ready;
         try { await source.querySelector('.report-letterhead').decode(); } catch { /* La impresión informa el error de imagen. */ }

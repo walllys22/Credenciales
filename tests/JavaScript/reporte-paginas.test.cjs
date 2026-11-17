@@ -10,6 +10,12 @@ const paginate = (...args) => JSON.parse(JSON.stringify(context.module.exports.a
 test('a short report fits in one page with its totals', () => {
     assert.deepEqual(paginate([20, 30], 100, 15), [{ filas: [0, 1], totales: true }]);
 });
+test('fifteen participants fit per page and participant sixteen starts the next', () => {
+    const pages = paginate(Array(34).fill(30), 650, 100);
+    assert.deepEqual(pages.map(page => page.filas.length), [15, 15, 4]);
+    assert.equal(pages[1].filas[0], 15);
+    assert.equal(pages[2].totales, true);
+});
 test('multiple pages preserve every row once and show totals only at the end', () => {
     const pages = paginate([40, 60, 55, 30, 20], 100, 20);
     assert.deepEqual(pages, [

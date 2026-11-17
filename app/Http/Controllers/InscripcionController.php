@@ -31,6 +31,23 @@ class InscripcionController extends Controller
         return view('inscripciones.index', ['inscripciones' => $inscripciones, 'eventos' => Evento::orderBy('nombre')->get(), 'q' => $q]);
     }
     // Lista todas las inscripciones sin paginación ni filtros de la pantalla de registro.
+    public function pdf(Request $request, \App\Support\ReportePdf $generador)
+    {
+        try {
+            $pdf = $generador->generar($this->imprimir($request)->render());
+        } catch (\RuntimeException $exception) {
+            report($exception);
+
+            return redirect()->route('inscripciones.imprimir', $request->only('evento_id'))
+                ->with('error', 'No se pudo generar el PDF. Comprueba que Chrome o Edge esté instalado en el servidor.');
+        }
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="participantes-inscritos.pdf"',
+        ]);
+    }
+
     public function imprimir(Request $request)
     {
         $eventoId = $request->query('evento_id');
