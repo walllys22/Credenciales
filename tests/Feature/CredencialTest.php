@@ -11,6 +11,30 @@ class CredencialTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_batch_requires_distinct_registrations_from_the_selected_event_and_preserves_individual_printing(): void
+    {
+        $first = $this->inscripcion($this->persona());
+        $second = Inscripcion::create(['persona_id' => $this->persona('7654321')->id, 'evento_id' => $first->evento_id, 'cargo' => 'Organizador']);
+        $other = $this->inscripcion($this->persona('5555555'), 'Otro evento');
+        $url = route('inscripciones.credenciales-lote');
+        $this->get(route('inscripciones.index', ['evento_id' => $first->evento_id]))->assertOk()
+            ->assertSeeInOrder(['id="imprimir-lote"', route('inscripciones.imprimir')], false)
+            ->assertSee('seleccionar-credencial', false)->assertDontSee('target="_blank"', false);
+        $this->post($url, ['evento_id' => $first->evento_id, 'inscripciones' => [$first->id]])->assertSessionHasErrors('inscripciones');
+        $this->post($url, ['evento_id' => $first->evento_id, 'inscripciones' => [$first->id, $first->id]])->assertSessionHasErrors('inscripciones.1');
+        $this->post($url, ['evento_id' => $first->evento_id, 'inscripciones' => [$first->id, $other->id]])->assertSessionHasErrors('inscripciones');
+        $response = $this->post($url, ['evento_id' => $first->evento_id, 'inscripciones' => [$second->id, $first->id]])->assertOk()
+            ->assertViewIs('inscripciones.credenciales-lote')->assertSeeInOrder(['Organizador', 'Participante'])
+            ->assertDontSee('Otro evento')->assertSee('Volver a inscripciones');
+        $items = $response->viewData('credenciales');
+        $this->assertCount(2, $items);
+        $this->assertNotSame($items[0]['qr'], $items[1]['qr']);
+        $this->get($items[0]['verificacionUrl'])->assertOk()->assertSee('Organizador');
+        $this->get(route('inscripciones.credencial', $first))->assertOk()->assertViewIs('personas.vercred');
+        $this->actingAs(new \App\Models\User(['id' => 5, 'role' => 'impresiones', 'active' => true]));
+        $this->post($url, ['evento_id' => $first->evento_id, 'inscripciones' => [$first->id, $second->id]])->assertOk();
+    }
+
     private function persona(string $documento = '1234567'): Persona
     {
         $grado = Grado::firstOrCreate(['nombre' => 'Dan']);

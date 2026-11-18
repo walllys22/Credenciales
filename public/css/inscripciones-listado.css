@@ -6,7 +6,9 @@
 #filtro-inscripciones .form-label{margin-bottom:4px}
 .registrations-index>.panel-toolbar{padding:8px 24px 12px}
 .registrations-index>.panel-toolbar h2{margin:0}
+#form-credenciales-lote{padding:0 24px}
 @media(max-width:575px){
     #main-content>.page-heading{padding:8px 12px}
     .registrations-index>.panel-toolbar{padding:8px 12px 12px}
+    #form-credenciales-lote{padding:0 12px}
 }

@@ -37,6 +37,35 @@ class CredencialController extends Controller
         return $this->render($inscripcion->persona, $inscripcion);
     }
 
+    public function lote(Request $request)
+    {
+        $datos = $request->validate([
+            'evento_id' => 'required|integer|exists:eventos,id',
+            'inscripciones' => 'required|array|min:2|max:500',
+            'inscripciones.*' => 'required|integer|distinct|exists:inscripciones,id',
+        ]);
+        $inscripciones = Inscripcion::with(['persona.grado', 'persona.pais', 'evento'])
+            ->where('evento_id', $datos['evento_id'])->whereIn('id', $datos['inscripciones'])->get()->keyBy('id');
+        if ($inscripciones->count() !== count($datos['inscripciones'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['inscripciones' => 'Las inscripciones deben pertenecer al evento seleccionado.']);
+        }
+        $credenciales = collect($datos['inscripciones'])->map(function ($id) use ($inscripciones) {
+            $inscripcion = $inscripciones[$id];
+            $generator = clone URL::getFacadeRoot();
+            if ($publicUrl = CredencialPublicUrl::origin()) {
+                $generator->forceRootUrl(rtrim($publicUrl, '/'));
+                $generator->forceScheme(parse_url($publicUrl, PHP_URL_SCHEME));
+            }
+            $verificacionUrl = $generator->signedRoute('credenciales.verificar', ['inscripcion' => $id]);
+            $fill = Fill::uniformColor(new Alpha(0, new Gray(100)), new Gray(0));
+            $writer = new Writer(new ImageRenderer(new RendererStyle(300, 20, fill: $fill), new SvgImageBackEnd));
+            $qr = 'data:image/svg+xml;base64,'.base64_encode($writer->writeString($verificacionUrl));
+            return compact('inscripcion', 'verificacionUrl', 'qr');
+        });
+        return response()->view('inscripciones.credenciales-lote', compact('credenciales'))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
     private function render(Persona $persona, ?Inscripcion $inscripcion)
     {
         $qr = null;

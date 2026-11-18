@@ -11,6 +11,7 @@
     <article class="certificate" aria-label="Certificado de participación de {{ $persona->nombre_completo }} en {{ $evento->nombre }}">
         <img class="certificate-template" src="{{ asset('images/Certificado.png') }}" alt="Certificado de participación Shorin Ryu Shorinkan - Karate y Kobudo">
         <div class="certificate-recipient">{{ $nombreCertificado }}</div>
+        <img class="certificate-signature" src="{{ asset('images/FirmaRenshi.png') }}?v={{ filemtime(public_path('images/FirmaRenshi.png')) }}" alt="Firma de Roberto Zabala Atipobo">
     </article>
 </div>
 @endsection

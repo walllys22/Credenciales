@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ asset('css/inscripciones-listado.css') }}?v={{ filemtime(public_path('css/inscripciones-listado.css')) }}">
 @endpush
 @section('actions')
+    @if($eventoElegido)<button type="submit" form="form-credenciales-lote" class="btn btn-create btn-project" data-action-style="print" aria-label="Imprimir credenciales por lotes" title="Imprimir credenciales por lotes (mínimo dos)" id="imprimir-lote" disabled><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span class="button-label">Imprimir credenciales por lotes</span></button>@endif
     @if(auth()->user()->isSuperAdmin())
     {{-- Abre el listado completo de inscritos; botón verde a la izquierda de Nueva inscripción. --}}
     @if($eventoElegido)<a href="{{ route('inscripciones.imprimir', ['evento_id' => request('evento_id')]) }}" class="btn btn-create btn-project" data-action-style="print" aria-label="Imprimir" title="Imprimir"><i class="fa-solid fa-print" aria-hidden="true"></i><span class="button-label">Imprimir</span></a>@endif
@@ -35,10 +36,18 @@
         <h2 class="d-flex flex-wrap align-items-baseline gap-2">Participantes inscritos @if($eventoElegido)<span class="text-secondary">· {{ $eventoElegido->nombre }}</span>@endif</h2>
     </div>
 </div>
+<form id="form-credenciales-lote" method="POST" action="{{ route('inscripciones.credenciales-lote') }}" data-evento="{{ $eventoElegido->id }}">
+    @csrf
+    <input type="hidden" name="evento_id" value="{{ $eventoElegido->id }}">
+    <div id="seleccion-lote-campos"></div>
+    <p id="seleccion-lote-estado" role="status">Seleccione al menos dos inscritos para imprimir sus credenciales.</p>
+    <button type="button" id="limpiar-seleccion-lote" class="btn btn-sm btn-outline-secondary mb-3">Limpiar selección</button>
+</form>
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>
             <tr>
+                <th><input type="checkbox" id="seleccionar-pagina" aria-label="Seleccionar inscritos de esta página"></th>
                 <th>Participante</th>
                 <th>Organización / Grado</th>
                 <th>Teléfono</th>
@@ -51,6 +60,7 @@
         <tbody>
 @forelse($inscripciones as $inscripcion)
 <tr>
+    <td><input type="checkbox" class="seleccionar-credencial" value="{{ $inscripcion->id }}" aria-label="Seleccionar a {{ $inscripcion->persona->nombre_completo }}"></td>
     <td>
         <div class="person-cell">@include('personas.photo', ['persona' => $inscripcion->persona])<div>
             <strong>{{ $inscripcion->persona->nombre_completo }}</strong>
@@ -91,7 +101,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="{{ auth()->user()->isSuperAdmin() ? 5 : 4 }}">
+    <td colspan="{{ auth()->user()->isSuperAdmin() ? 6 : 5 }}">
         <div class="empty-state">
             @include('partials.icon', ['name' => 'inscripciones'])
             <h3>{{ $q || request('evento_id') ? 'No hay inscripciones con estos filtros' : 'Haz parte del encuentro' }}</h3>
@@ -137,6 +147,7 @@
 <link rel="stylesheet" href="{{ asset('css/person-photo-preview.css') }}?v={{ filemtime(public_path('css/person-photo-preview.css')) }}">
 @endpush
 @push('scripts')
+<script src="{{ asset('js/credenciales-lote-seleccion.js') }}?v={{ filemtime(public_path('js/credenciales-lote-seleccion.js')) }}" defer></script>
 <script src="{{ asset('js/person-photo-preview.js') }}?v={{ filemtime(public_path('js/person-photo-preview.js')) }}" defer></script>
 @if(auth()->user()->isSuperAdmin())
 <script src="{{ asset('js/inscripciones-eliminar.js') }}?v={{ filemtime(public_path('js/inscripciones-eliminar.js')) }}" defer></script>

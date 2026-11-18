@@ -1,6 +1,6 @@
 # Memoria técnica de Credencial
 
-Actualizada: 17 de noviembre de 2026 (America/La_Paz).
+Actualizada: 18 de noviembre de 2026 (America/La_Paz).
 
 ## Actualización obligatoria de esta memoria
 
@@ -98,6 +98,8 @@ Rutas GET permitidas a impresiones, por nombre:
 `inscripciones.index`, `inscripciones.credencial`, `inscripciones.certificado`,
 `personas.foto` y `eventos.imagen` (recursos gráficos de la impresión).
 Los métodos de escritura de gestión están bloqueados para este rol.
+El POST `inscripciones.credenciales-lote` también está permitido para preparar la
+vista de impresión por lotes; no modifica registros.
 La raíz y el acceso de un usuario ya autenticado redirigen según su rol.
 
 Usuarios ofrece listado paginado a 25, alta, edición, contraseña opcional,
@@ -112,12 +114,60 @@ superadmin activo; las operaciones críticas usan transacción y bloqueo.
 - Si el grado normalizado es DAN, antepone `Sensei ` al nombre completo.
 - Vista: `resources/views/inscripciones/vercert.blade.php`.
 - Plantilla: `public/images/Certificado.png`. Fuente: `public/fonts/agnesa-kyoto.ttf`.
+- `public/images/FirmaRenshi.png` se superpone de forma proporcional sobre el
+  nombre de Roberto Zabala Atipobo, tanto en pantalla como en impresión. El
+  archivo original se conserva y su URL se versiona por fecha de modificación.
 - CSS: `public/css/certificados.css`. Nombre en top 47%, left 21%, width 58%;
   tamaño base 22 pt, alineado a la izquierda. Vista previa reducida en pantalla.
 - Impresión: carta horizontal, margen CSS 0, ancho 279,4 mm y proporción original.
   Márgenes físicos y calidad final dependen del controlador de impresora.
 - `public/js/certificados.js` espera fuentes e imágenes antes de window.print().
 - No se genera un PDF persistido ni se registra entrega al imprimir.
+
+### 18/11/2026: firma flotante de Renshi
+
+Se incorporó la imagen proporcionada encima del nombre de Roberto Zabala Atipobo
+mediante posicionamiento proporcional a la plantilla. Archivos principales:
+`resources/views/inscripciones/vercert.blade.php`, `public/css/certificados.css`,
+`public/images/FirmaRenshi.png` y `certificado.md`. Verificaciones: CertificadoTest
+**4 pruebas / 27 aserciones aprobadas**, compilación y limpieza Blade y
+`git diff --check` correctos. No se agregaron pruebas para este ajuste visual;
+sin revisión interactiva ni impresión física, por lo que la posición final debe
+comprobarse en la impresora utilizada.
+
+## Impresión de credenciales por lotes (18/11/2026)
+
+El listado incluye un botón de lote a la izquierda de Imprimir reporte y casillas
+por inscrito, con selección de la página visible. La selección se conserva por
+evento en sessionStorage al cambiar página o filtro y se puede limpiar.
+El mensaje y el botón de limpieza respetan el margen izquierdo del encabezado
+«Participantes inscritos», también en pantallas pequeñas.
+Se requieren
+entre 2 y 500 inscripciones distintas del evento; el servidor valida existencia,
+unicidad y pertenencia. La vista se abre en la misma pestaña y permite volver al
+listado del evento. Muestra anverso y reverso en una hoja A4 por inscrito, con QR
+firmados individuales. También está disponible para el rol impresiones. Los flujos
+individuales no se modificaron. Sin almacenamiento del navegador, la selección sólo
+permanece en la página actual; si se elimina una inscripción seleccionada, debe
+limpiarse o corregirse la selección.
+
+### 18/11/2026: alineación del mensaje de selección
+
+Se ajustó el margen horizontal del formulario de selección al del encabezado
+del listado, con el mismo ajuste para pantallas pequeñas. Archivos:
+`public/css/inscripciones-listado.css` y `certificado.md`. Verificación:
+`git diff --check` correcto. No se ejecutaron pruebas automatizadas ni revisión
+visual interactiva por tratarse de un ajuste de presentación reversible.
+
+Archivos: routes/web.php, ProjectAccess.php, CredencialController.php,
+inscripciones/index.blade.php, inscripciones/credenciales-lote.blade.php,
+public/js/credenciales-lote-seleccion.js, tests/Feature/CredencialTest.php y
+certificado.md. Verificaciones nuevas: CredencialTest **8 pruebas / 89 aserciones
+aprobadas**, con mínimo, duplicados, evento, QR y acceso de impresiones; sintaxis
+PHP y JavaScript correctas. Sin revisión visual interactiva ni impresión física;
+la distribución final depende de los ajustes de impresión del navegador.
+Tras cambiar la apertura a la misma pestaña, la prueba dirigida volvió a pasar
+con 22 aserciones, incluida la ausencia de nueva pestaña y el control de regreso.
 
 ## Credenciales, ficha y QR público
 

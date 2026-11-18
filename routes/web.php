@@ -34,6 +34,7 @@ Route::middleware(['auth', ProjectAccess::class])->group(function () {
     Route::get('/personas/{persona}/foto', [PersonaController::class, 'foto'])->name('personas.foto');
     Route::get('/personas/{persona}/credencial', [CredencialController::class, 'show'])->name('personas.credencial');
     Route::resource('eventos', EventoController::class)->except('show');
+    Route::post('/inscripciones/credenciales-lote', [CredencialController::class, 'lote'])->name('inscripciones.credenciales-lote');
     Route::get('/inscripciones/imprimir', [InscripcionController::class, 'imprimir'])->name('inscripciones.imprimir');
     Route::get('/inscripciones/pdf', [InscripcionController::class, 'pdf'])->name('inscripciones.pdf');
     Route::get('/inscripciones/{inscripcion}/pagos', [PagoController::class, 'create'])->name('inscripciones.pagos.create');
