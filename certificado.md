@@ -117,6 +117,7 @@ superadmin activo; las operaciones críticas usan transacción y bloqueo.
 - `public/images/FirmaRenshi.png` se superpone de forma proporcional sobre el
   nombre de Roberto Zabala Atipobo, tanto en pantalla como en impresión. El
   archivo original se conserva y su URL se versiona por fecha de modificación.
+  Su posición vertical se ajusta con `top:75.5%` en `.certificate-signature`.
 - CSS: `public/css/certificados.css`. Nombre en top 47%, left 21%, width 58%;
   tamaño base 22 pt, alineado a la izquierda. Vista previa reducida en pantalla.
 - Impresión: carta horizontal, margen CSS 0, ancho 279,4 mm y proporción original.
@@ -134,6 +135,14 @@ mediante posicionamiento proporcional a la plantilla. Archivos principales:
 `git diff --check` correctos. No se agregaron pruebas para este ajuste visual;
 sin revisión interactiva ni impresión física, por lo que la posición final debe
 comprobarse en la impresora utilizada.
+
+### 18/11/2026: ajuste vertical de la firma
+
+Se bajó la firma de 74,5 % a 75,5 % de la altura del certificado y se dejó un
+comentario sobre el valor que controla su posición. Archivos: `public/css/certificados.css`
+y `certificado.md`. Verificación: `git diff --check` correcto. No se ejecutaron
+pruebas automatizadas ni impresión física por ser un ajuste visual reversible;
+la ubicación debe revisarse en pantalla e impresora.
 
 ## Impresión de credenciales por lotes (18/11/2026)
 

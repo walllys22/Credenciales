@@ -5,7 +5,14 @@
 .certificate-stage{width:100%;max-width:1000px;margin:0 auto;overflow-x:auto}
 .certificate{position:relative;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
 .certificate-template{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}
-.certificate-signature{position:absolute;left:59%;top:74.5%;width:16%;height:auto}
+.certificate-signature{
+    position:absolute;
+    left:59%;
+    /* Posición vertical de la firma: aumenta top para bajarla o redúcelo para subirla. */
+    top:78%;
+    width:16%;
+    height:auto
+}
 .certificate-recipient{
     position:absolute;
     top:47%;
