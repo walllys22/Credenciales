@@ -117,14 +117,63 @@ superadmin activo; las operaciones críticas usan transacción y bloqueo.
 - `public/images/FirmaRenshi.png` se superpone de forma proporcional sobre el
   nombre de Roberto Zabala Atipobo, tanto en pantalla como en impresión. El
   archivo original se conserva y su URL se versiona por fecha de modificación.
-  Su posición vertical se ajusta con `top:75.5%` en `.certificate-signature`.
+  Su posición vertical se ajusta con `top:78%` en `.certificate-signature`.
 - CSS: `public/css/certificados.css`. Nombre en top 47%, left 21%, width 58%;
-  tamaño base 22 pt, alineado a la izquierda. Vista previa reducida en pantalla.
-- Impresión: carta horizontal, margen CSS 0, ancho 279,4 mm y proporción original.
+  tamaño impreso 22 pt, alineado a la izquierda. La vista previa escala el nombre y comparte la caja de impresión; la plantilla se amplía horizontalmente al 104 %.
+- Impresión: hoja horizontal de 296 × 211 mm y certificado de 295 × 210 mm, centrado con 0,5 mm libres por borde y margen de página CSS 0.
   Márgenes físicos y calidad final dependen del controlador de impresora.
 - `public/js/certificados.js` espera fuentes e imágenes antes de window.print().
 - No se genera un PDF persistido ni se registra entrega al imprimir.
 
+### 19/11/2026: imagen del certificado más ancha
+
+La plantilla se amplió horizontalmente al 104 % y se desplazó -2 % para mantener
+su centro, en pantalla e impresión. Su altura y la caja de 295 × 210 mm no
+cambiaron; tampoco cambió la posición del nombre ni de la firma. Al sobresalir
+aproximadamente 5,9 mm por lado de la caja y 5,4 mm de la hoja configurada,
+el borde del arte puede recortarse: comprobar en el equipo antes de imprimir.
+El ancho se ajusta en `.certificate-template` en `public/css/certificados.css`.
+Archivos: `public/css/certificados.css` y `certificado.md`.
+Verificación: `git diff --check` correcto. Sin pruebas automatizadas por ser un
+ajuste CSS visual reversible y sin nueva impresión física ni revisión visual
+interactiva; la posición final y los márgenes dependen de la impresora.
+### 19/11/2026: vista previa proporcional a la impresión
+
+La vista previa usa la proporción 295:210 del certificado impreso, ajusta la
+plantilla a la misma caja y escala el nombre con el ancho del certificado. La
+firma y el nombre mantienen posiciones porcentuales comunes en pantalla e
+impresión. El archivo `public/css/certificados.css` contiene comentarios para
+identificar el tamaño de hoja, ancho y alto impreso, ubicación en la hoja y
+posiciones del nombre y firma. La impresora y el navegador pueden imponer
+márgenes o escalado; no se puede garantizar tamaño físico desde CSS solamente.
+Archivos: `public/css/certificados.css` y `certificado.md`.
+Verificaciones: CertificadoTest, 4 pruebas y 27 aserciones aprobadas, y
+`git diff --check` correcto. Sin revisión visual interactiva ni impresión física;
+se debe comprobar en el equipo con papel 296 × 211 mm y escala 100 %.
+### 19/11/2026: ajuste a hoja de 296 × 211 mm
+
+La hoja horizontal se configuró en 296 × 211 mm y el certificado centrado en
+295 × 210 mm, dejando 0,5 mm por borde. El ancho indicado de 195 mm se interpretó
+como 295 mm porque la petición exige cubrir casi toda la hoja; confirmar esa
+interpretación si se deseaba efectivamente 195 mm. La imagen se ajusta a esas
+dimensiones y cambia de proporción; su borde gráfico interno se conserva.
+Archivos: `public/css/certificados.css` y `certificado.md`.
+Verificación: `git diff --check` correcto. No se ejecutaron pruebas automatizadas
+por ser un ajuste CSS reversible ni se dispone de nueva impresión física o vista
+previa interactiva. El navegador y el controlador deben respetar el tamaño de
+papel, escala 100 % y capacidad de impresión sin bordes; la configuración CSS
+no elimina los márgenes físicos de una impresora que no admita esa opción.
+### 19/11/2026: certificado a página completa
+
+La impresión usa hoja horizontal de 294 × 210 mm y ajusta el certificado a todo
+el espacio, sin margen CSS. De los anchos solicitados 294 y 295 mm, se eligió
+294 mm para que el certificado quepa en la hoja de 294 mm; esto modifica la
+proporción original del arte. La vista de pantalla mantiene sus medidas.
+Archivos: `public/css/certificados.css` y `certificado.md`.
+Verificaciones: CertificadoTest, 4 pruebas y 27 aserciones aprobadas;
+`git diff --check` correcto. Sin prueba visual del diálogo ni impresión física:
+se debe seleccionar el tamaño de papel indicado, escala 100 % y una impresora
+que admita impresión sin bordes para cubrir físicamente toda la hoja.
 ### 18/11/2026: firma flotante de Renshi
 
 Se incorporó la imagen proporcionada encima del nombre de Roberto Zabala Atipobo
@@ -149,7 +198,7 @@ la ubicación debe revisarse en pantalla e impresora.
 El listado incluye un botón de lote a la izquierda de Imprimir reporte y casillas
 por inscrito, con selección de la página visible. La selección se conserva por
 evento en sessionStorage al cambiar página o filtro y se puede limpiar.
-El mensaje y el botón de limpieza respetan el margen izquierdo del encabezado
+El botón de limpieza respeta el margen izquierdo del encabezado
 «Participantes inscritos», también en pantallas pequeñas.
 Se requieren
 entre 2 y 500 inscripciones distintas del evento; el servidor valida existencia,
@@ -160,6 +209,17 @@ individuales no se modificaron. Sin almacenamiento del navegador, la selección 
 permanece en la página actual; si se elimina una inscripción seleccionada, debe
 limpiarse o corregirse la selección.
 
+### 19/11/2026: retirado el mensaje de selección del lote
+
+Se quitó del listado el contador de inscritos seleccionados y el texto sobre el
+límite de impresión. Permanecen las casillas, Limpiar selección, la conservación
+por evento y la validación de 2 a 500 inscripciones. Archivos:
+`resources/views/inscripciones/index.blade.php`,
+`public/js/credenciales-lote-seleccion.js` y `certificado.md`.
+Verificaciones: prueba dirigida de lote aprobada (1 prueba, 22 aserciones),
+sintaxis JavaScript, compilación y limpieza Blade y `git diff --check` correctos.
+Sin revisión visual interactiva; no se ejecutó la suite completa por ser un
+ajuste de presentación acotado.
 ### 19/11/2026: integración del logo en el PDF del lote
 
 El PDF dibuja el logo del pie sobre el arte con el modo PDF Multiply, como la

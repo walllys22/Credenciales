@@ -3,10 +3,12 @@
 }
 @font-face{font-family:'Agnesa Kyoto';src:url('../fonts/agnesa-kyoto.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
 .certificate-stage{width:100%;max-width:1000px;margin:0 auto;overflow-x:auto}
-.certificate{position:relative;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
-.certificate-template{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}
+.certificate{position:relative;container-type:inline-size;aspect-ratio:295 / 210;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
+/* Ancho de la imagen: 104 % la amplía horizontalmente; left la mantiene centrada. */
+.certificate-template{position:absolute;top:0;left:-2%;display:block;width:104%;height:100%;object-fit:fill}
 .certificate-signature{
     position:absolute;
+    /* Posición de la firma sobre el certificado: left desplaza horizontalmente. */
     left:59%;
     /* Posición vertical de la firma: aumenta top para bajarla o redúcelo para subirla. */
     top:78%;
@@ -15,6 +17,7 @@
 }
 .certificate-recipient{
     position:absolute;
+    /* Posición del nombre: top lo mueve verticalmente y left horizontalmente. */
     top:47%;
     /* Desplaza el nombre hacia la derecha para alinearlo con el inicio de la línea del certificado. */
     left:21%;
@@ -33,23 +36,31 @@
     line-height:1.25;color:#111;
     overflow-wrap:anywhere
 }
-/* Reduce un 20 % la vista del certificado y su texto; conserva el tamaño de impresión. */
+/* La vista previa mantiene la proporción y escala el nombre junto con el certificado. */
 @media screen{
     .certificate-stage{width:60%;max-width:800px}
     .certificate{min-width:496px}
-    .certificate-recipient{font-size:calc(var(--certificate-recipient-font-size) * .8)}
+    .certificate-recipient{font-size:2.631cqw}
 }
-/* Impresión en hoja carta horizontal (279,4 x 215,9 mm), sin márgenes en los cuatro lados. */
-@page{size:letter landscape;margin:0}
+/* Archivo de ajustes: public/css/certificados.css.
+   Hoja horizontal: primer valor = ancho; segundo = alto, ambos en milímetros. */
+@page{size:296mm 211mm;margin:0}
 @media print{
     html,body{margin:0!important;padding:0!important;background:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
     .sidebar,.topbar,.page-heading,.content-footer,.alert{display:none!important}
     .app-shell,.main-shell,body.sidebar-collapsed .main-shell{display:block!important;margin:0!important;min-height:0!important;width:auto!important}
     #main-content{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
-    /* Ajusta el certificado al ancho de carta, conservando las proporciones de la imagen original. */
-    .certificate-stage{width:279.4mm!important;max-width:279.4mm!important;margin:0!important;overflow:visible!important}
-    .certificate{width:279.4mm!important;min-width:0!important;box-shadow:none;break-inside:avoid;page-break-inside:avoid}
-    /* Mantiene la imagen original; la opción Alta calidad se selecciona en el controlador de la impresora. */
-    .certificate-template{width:100%;height:auto}
+    /* Ubicación en la hoja: 0,5 mm arriba y centrado horizontalmente. */
+    .certificate-stage{width:295mm!important;max-width:295mm!important;margin:0.5mm auto!important;overflow:visible!important}
+    /* Tamaño impreso del certificado: width = ancho; height = alto. */
+    .certificate{
+        width:295mm!important;
+        height:210mm!important;
+        min-width:0!important;
+        box-shadow:none;
+        break-inside:avoid;
+        page-break-inside:avoid
+    }
+    .certificate-template{height:100%;aspect-ratio:auto;object-fit:fill}
     .certificate-recipient{font-size:var(--certificate-recipient-font-size)}
 }

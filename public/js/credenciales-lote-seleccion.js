@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const all = document.getElementById('seleccionar-pagina');
     const fields = document.getElementById('seleccion-lote-campos');
     const button = document.getElementById('imprimir-lote');
-    const status = document.getElementById('seleccion-lote-estado');
     let selected = new Set();
     try { selected = new Set(JSON.parse(sessionStorage.getItem(key) || '[]')); } catch (_) { /* Storage may be unavailable. */ }
     function update() {
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fields.append(input);
         });
         button.disabled = selected.size < 2 || selected.size > 500;
-        status.textContent = `${selected.size} inscritos seleccionados. Seleccione entre 2 y 500 para imprimir.`;
         try { sessionStorage.setItem(key, JSON.stringify([...selected])); } catch (_) { /* Selection remains on this page. */ }
     }
     boxes.forEach(box => box.addEventListener('change', () => {
