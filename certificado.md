@@ -119,11 +119,33 @@ superadmin activo; las operaciones críticas usan transacción y bloqueo.
   archivo original se conserva y su URL se versiona por fecha de modificación.
   Su posición vertical se ajusta con `top:78%` en `.certificate-signature`.
 - CSS: `public/css/certificados.css`. Nombre en top 47%, left 21%, width 58%;
-  tamaño impreso 22 pt, alineado a la izquierda. La vista previa escala el nombre y comparte la caja de impresión; la plantilla se amplía horizontalmente al 104 %.
-- Impresión: hoja horizontal de 296 × 211 mm y certificado de 295 × 210 mm, centrado con 0,5 mm libres por borde y margen de página CSS 0.
+  tamaño impreso 22 pt, alineado a la izquierda. La vista previa escala el nombre y comparte la caja de impresión; la plantilla ocupa aproximadamente el 102,305 % del ancho de la caja (301,8 mm impresos).
+- Impresión: hoja horizontal de 296 × 211 mm y caja de certificado de 295 × 210 mm, centrada en ambos ejes mediante flex, con margen de página CSS 0. La imagen, también centrada, sobresale 2,9 mm a cada lado de la hoja.
   Márgenes físicos y calidad final dependen del controlador de impresora.
 - `public/js/certificados.js` espera fuentes e imágenes antes de window.print().
 - No se genera un PDF persistido ni se registra entrega al imprimir.
+
+### 19/11/2026: centrado del certificado en la hoja
+
+La zona de impresión ocupa la hoja de 296 × 211 mm y centra la caja del
+certificado horizontal y verticalmente. La imagen se centra en ambos ejes de
+la caja, conservando sus dimensiones y las posiciones del nombre y la firma.
+La imagen de 301,8 mm sigue sobresaliendo 2,9 mm por cada lado de la hoja;
+puede recortarse al imprimir. Archivos: `public/css/certificados.css` y
+`certificado.md`. Verificación: `git diff --check` correcto. Sin pruebas
+automatizadas por ser un ajuste visual CSS, ni revisión visual interactiva o
+impresión física; el resultado depende de los márgenes y escala de impresión.
+
+### 19/11/2026: reducción del ancho del certificado
+
+El ancho de la imagen del certificado se redujo 5 mm: de 306,8 a 301,8 mm
+sobre la caja impresa de 295 mm. Permanece centrada y conserva su altura; la
+vista previa mantiene la misma proporción. La imagen todavía sobresale 3,4 mm
+por cada lado de la caja y 2,9 mm de la hoja, por lo que puede recortarse.
+Archivos: `public/css/certificados.css` y `certificado.md`.
+Verificación: `git diff --check` correcto. No se ejecutaron pruebas automatizadas
+por ser un ajuste visual CSS; sin revisión visual interactiva ni impresión física.
+La impresión final depende de los márgenes y escala del navegador y la impresora.
 
 ### 19/11/2026: imagen del certificado más ancha
 
