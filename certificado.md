@@ -1,6 +1,6 @@
 # Memoria técnica de Credencial
 
-Actualizada: 18 de noviembre de 2026 (America/La_Paz).
+Actualizada: 19 de noviembre de 2026 (America/La_Paz).
 
 ## Actualización obligatoria de esta memoria
 
@@ -154,12 +154,68 @@ El mensaje y el botón de limpieza respetan el margen izquierdo del encabezado
 Se requieren
 entre 2 y 500 inscripciones distintas del evento; el servidor valida existencia,
 unicidad y pertenencia. La vista se abre en la misma pestaña y permite volver al
-listado del evento. Muestra anverso y reverso en una hoja A4 por inscrito, con QR
+listado del evento. Agrupa hasta dos inscritos por hoja vertical de 210 × 294 mm; cada fila contiene anverso y reverso de 93 × 126 mm, con QR
 firmados individuales. También está disponible para el rol impresiones. Los flujos
 individuales no se modificaron. Sin almacenamiento del navegador, la selección sólo
 permanece en la página actual; si se elimina una inscripción seleccionada, debe
 limpiarse o corregirse la selección.
 
+### 19/11/2026: integración del logo en el PDF del lote
+
+El PDF dibuja el logo del pie sobre el arte con el modo PDF Multiply, como la
+mezcla de la vista en navegador, en ambas caras de cada inscrito y también en
+la última hoja impar. Esto integra visualmente el fondo casi blanco del PNG con
+la credencial; no convierte el PNG original en una imagen con canal alfa ni
+modifica los PDF descargados previamente. El aspecto puede variar ligeramente
+según el visor que interprete el modo de mezcla. El PDF original recibido tenía
+una página y no contenía el modo Multiply.
+Archivos: `app/Http/Controllers/CredencialController.php`,
+`resources/views/inscripciones/credenciales-lote-pdf.blade.php`,
+`tests/Feature/CredencialTest.php` y `certificado.md`.
+Verificaciones: prueba dirigida de PDF de tres inscritos en dos páginas aprobada
+(1 prueba, 11 aserciones), con comprobación del modo Multiply en el PDF;
+sintaxis PHP, compilación y limpieza Blade y `git diff --check` correctos.
+No se pudo renderizar el PDF para revisión visual por falta de un renderizador
+disponible; queda pendiente comprobar una nueva descarga en el visor e impresora.
+### 19/11/2026: vista previa, PDF y menú
+
+La vista por lotes representa cada hoja blanca de 210 × 294 mm con sus márgenes,
+caras y separación de impresión. Los botones flotantes permiten ir a la página
+anterior o siguiente e indican la página visible; se ocultan para una sola hoja
+y nunca se imprimen. Todas las hojas permanecen disponibles para imprimir.
+En pantallas estrechas la hoja se puede desplazar horizontalmente.
+
+El botón PDF vuelve a validar el evento y las inscripciones seleccionadas y
+descarga todas las hojas con Dompdf, en el mismo orden y con las medidas de la
+impresión. La plantilla PDF usa imágenes locales y fotos privadas incorporadas,
+y los QR individuales firmados; no requiere descargar recursos externos. La
+plantilla PDF es independiente del CSS de navegador: su representación visual,
+particularmente el fondo claro del logo y textos largos, debe comprobarse en una
+revisión visual. Lotes grandes de hasta 500 pueden requerir tiempo y memoria
+considerables durante la generación; no se realizó una prueba de carga.
+Se quitó únicamente el rótulo Administración del menú lateral.
+Archivos: `resources/views/inscripciones/credenciales-lote.blade.php`,
+`resources/views/inscripciones/credenciales-lote-pdf.blade.php`,
+`public/js/credenciales-lote-paginas.js`, `app/Http/Controllers/CredencialController.php`,
+`resources/views/layouts/app.blade.php`, pruebas correspondientes y `certificado.md`.
+Verificaciones de esta tarea: CredencialTest, 9 pruebas / 101 aserciones,
+incluida descarga PDF de tres inscritos en dos páginas; dos pruebas JavaScript de
+navegación aprobadas; sintaxis PHP y JavaScript correctas; compilación y limpieza
+Blade correctas; `git diff --check` correcto. No hubo revisión visual del PDF ni
+prueba de impresión física porque no se dispone aquí de un renderizador PDF;
+confirmar el resultado en el visor y la impresora a escala del 100 %.
+### 19/11/2026: dos credenciales completas por hoja
+
+La impresión por lotes usa hoja vertical de 210 × 294 mm, márgenes de 10 mm y
+hasta dos inscritos por hoja. Cada fila contiene anverso y reverso de 93 × 126 mm,
+con 4 mm de separación horizontal y vertical. Una cantidad impar deja la última
+fila vacía. La impresión individual mantiene su configuración anterior.
+Archivos: `resources/views/inscripciones/credenciales-lote.blade.php`,
+`tests/Feature/CredencialTest.php` y `certificado.md`.
+Verificaciones: CredencialTest, 9 pruebas y 96 aserciones aprobadas, incluyendo
+agrupación impar; compilación y limpieza de vistas Blade correctas; `git diff
+--check` sin errores. Sin revisión visual de impresión ni impresión física: el
+navegador y la impresora deben respetar el tamaño de papel y la escala del 100 %.
 ### 18/11/2026: alineación del mensaje de selección
 
 Se ajustó el margen horizontal del formulario de selección al del encabezado
@@ -191,7 +247,7 @@ con 22 aserciones, incluida la ausencia de nueva pestaña y el control de regres
   Hay banderas SVG para Bolivia, Argentina, Chile y Estados Unidos; para países
   nuevos sin bandera incorporada se muestra sólo el nombre. Sin país no se
   muestra este bloque. La ficha pública y el reverso conservan sus tamaños.
-- Cada cara mide 62 × 100 mm. Impresión en A4 vertical con 8 mm de margen;
+- En impresión individual cada cara mide 62 × 100 mm, en A4 vertical con 8 mm de margen;
   anverso y reverso se imprimen, ficha se oculta mediante media print.
 - La ficha también se usa en la verificación pública. Evitar cambios que rompan
   sus fotos firmadas o hagan depender esa pantalla de la sesión administrativa.
@@ -204,6 +260,32 @@ con 22 aserciones, incluida la ausencia de nueva pestaña y el control de regres
 - Las fotos y las imágenes de evento privadas se sirven mediante controladores.
 - Las respuestas de gestión y documentos llevan Cache-Control private, no-store.
 
+### 19/11/2026: país en la ficha de verificación
+
+La ficha compartida muestra el país del participante y su bandera debajo del
+nombre del evento, a la derecha de la foto, tanto en la vista administrativa
+como en la verificación pública. Si no hay bandera local se muestra sólo el
+nombre; si no hay país se omite el bloque. La consulta pública carga también el
+país y conserva la foto firmada y el acceso sin sesión. No cambia la impresión
+del anverso y reverso ni las dimensiones de la ficha.
+Archivos: `resources/views/personas/ficha.blade.php`, `public/css/credenciales.css`,
+`app/Http/Controllers/CredencialController.php`, `tests/Feature/CredencialTest.php`
+y `certificado.md`. Verificaciones: prueba dirigida aprobada (1 prueba, 13
+aserciones), que cubre ficha administrativa, verificación pública sin sesión,
+país sin bandera y sin país; compilación y limpieza Blade y `git diff --check`
+correctos. Sin revisión visual interactiva; comprobar el ajuste con nombres de
+país y evento largos. No se repitió la suite completa para este ajuste acotado.
+### 19/11/2026: fondo del pie de credenciales
+
+El número de registro tiene fondo transparente y el logo del pie se integra al
+arte mediante `mix-blend-mode: multiply`, sin modificar el PNG compartido. La
+regla común cubre anverso, reverso, ficha y credenciales por lotes, en pantalla
+y en impresión. La integración del logo depende de que el navegador respete el
+modo de mezcla al imprimir; el PNG original conserva su fondo claro.
+Archivos: `public/css/credenciales.css` y `certificado.md`.
+Verificación: `git diff --check` sin errores. No se ejecutaron pruebas
+automatizadas por tratarse de un ajuste visual reversible; quedan pendientes la
+revisión visual en navegador y la impresión física.
 ## Imágenes actualizadas por el operador
 
 Se conservaron los archivos recibidos en public/images, modificados el 12/11/2026:

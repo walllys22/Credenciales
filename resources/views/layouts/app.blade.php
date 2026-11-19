@@ -28,7 +28,6 @@
         <a href="{{ route(auth()->user()->isSuperAdmin() ? 'dashboard' : 'inscripciones.index') }}" class="brand brand-image" aria-label="Sistema de Control de Inscripciones - Menú principal"><img class="brand-expanded" src="{{ asset('images/Logo.png') }}?v={{ filemtime(public_path('images/Logo.png')) }}" alt="Sistema de Control de Inscripciones" width="210" height="140"><img class="brand-collapsed" src="{{ asset('images/icono.png') }}?v={{ hash_file('sha256', public_path('images/icono.png')) }}" alt="Sistema de Control de Inscripciones" width="56" height="56"></a>
         @if(auth()->user()->isSuperAdmin())
         <a class="nav-link home-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon">@include('partials.icon', ['name' => 'home'])</span> Menú principal</a>
-        <div class="nav-caption">Administración</div>
         <nav class="nav flex-column gap-2">
             {{-- Catálogo de países ubicado debajo de Persona. --}}
             <a class="nav-link {{ request()->routeIs('paises.*') ? 'active' : '' }}" href="{{ route('paises.index') }}"><span class="nav-icon"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></span> País <span class="nav-arrow">›</span></a>

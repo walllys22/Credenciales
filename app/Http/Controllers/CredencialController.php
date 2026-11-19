@@ -62,6 +62,34 @@ class CredencialController extends Controller
             $qr = 'data:image/svg+xml;base64,'.base64_encode($writer->writeString($verificacionUrl));
             return compact('inscripcion', 'verificacionUrl', 'qr');
         });
+        if ($request->boolean('pdf')) {
+            $options = new \Dompdf\Options;
+            $options->setIsRemoteEnabled(false);
+            $pdf = new \Dompdf\Dompdf($options);
+            $pdf->setPaper([0, 0, 210 * 72 / 25.4, 294 * 72 / 25.4]);
+            $pdf->loadHtml(view('inscripciones.credenciales-lote-pdf', compact('credenciales'))->render(), 'UTF-8');
+            $pdf->render();
+            $cantidad = $credenciales->count();
+            $pdf->getCanvas()->page_script(function ($page, $pages, $canvas) use ($cantidad) {
+                // Igual que la vista previa: mezcla el fondo claro del logo con el arte.
+                $mm = 72 / 25.4;
+                $canvas->save();
+                $canvas->set_opacity(1, 'Multiply');
+                for ($fila = 0; $fila < min(2, $cantidad - ($page - 1) * 2); $fila++) {
+                    foreach ([0, 97] as $columna) {
+                        $canvas->image(public_path('images/Logo.png'), (10 + $columna + 93 * .08) * $mm,
+                            (10 + $fila * 130 + 126 * .985 - 7) * $mm, 8 * $mm, 7 * $mm);
+                    }
+                }
+                $canvas->restore();
+            });
+
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="credenciales.pdf"',
+                'Cache-Control' => 'private, no-store',
+            ]);
+        }
         return response()->view('inscripciones.credenciales-lote', compact('credenciales'))
             ->header('Cache-Control', 'private, no-store');
     }
@@ -89,7 +117,7 @@ class CredencialController extends Controller
 
     public function verificar(Inscripcion $inscripcion)
     {
-        $inscripcion->load(['persona.grado', 'evento']);
+        $inscripcion->load(['persona.grado', 'persona.pais', 'evento']);
 
         $persona = $inscripcion->persona;
         $evento = $inscripcion->evento;

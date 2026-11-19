@@ -9,8 +9,8 @@
 .credential-data dt{font-weight:700;flex-shrink:0}
 .credential-data dd{margin:0;overflow-wrap:anywhere;min-width:0}
 .credential-bottom{position:absolute;box-sizing:border-box;left:8%;right:8%;bottom:1.5%;height:7%;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.credential-bottom>img{width:8mm;height:7mm;object-fit:contain}
-.credential-bottom>span{font-size:8px;font-weight:700;background:#fffdf4e6;border-radius:2px;padding:1px 3px}
+.credential-bottom>img{width:8mm;height:7mm;object-fit:contain;mix-blend-mode:multiply}
+.credential-bottom>span{font-size:8px;font-weight:700;background:transparent;border-radius:2px;padding:1px 3px}
 /* Labels are printed in the front artwork; retain accessible text. */
 .credential-front .credential-card-content{inset:0}
 .credential-front .credential-photo{position:absolute;left:7.5%;top:50.8%;width:37.8%;height:30.5%;border-radius:1mm}
@@ -69,7 +69,9 @@
 .credential-file .credential-card-content{top:41%;left:7%;right:7%;bottom:15%}
 .credential-file-heading{display:flex;align-items:center;gap:2mm;margin-bottom:2mm}
 .credential-file-heading .credential-photo{width:16mm;height:19mm;flex-shrink:0;margin:0}
+.credential-file-heading-details{min-width:0;flex:1}
 .credential-file-heading .credential-event-title{font-size:9px;text-align:left}
+.credential-file-country{display:flex;align-items:center;justify-content:center;gap:1.3mm;font-size:11.7px;line-height:1.2;margin-top:1mm}
 .credential-file .credential-data{font-size:9px}
 .credential-sheet img{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 @media(max-width:700px){.credential-selector{flex-wrap:wrap}.credential-selector .form-label{width:100%}.credential-selector .form-select{min-width:100%}.credential-sheet{gap:24px}}

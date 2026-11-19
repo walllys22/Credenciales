@@ -40,7 +40,6 @@
     @csrf
     <input type="hidden" name="evento_id" value="{{ $eventoElegido->id }}">
     <div id="seleccion-lote-campos"></div>
-    <p id="seleccion-lote-estado" role="status">Seleccione al menos dos inscritos para imprimir sus credenciales.</p>
     <button type="button" id="limpiar-seleccion-lote" class="btn btn-sm btn-outline-secondary mb-3">Limpiar selección</button>
 </form>
 <div class="table-responsive">

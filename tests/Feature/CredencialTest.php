@@ -11,6 +11,31 @@ class CredencialTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_batch_groups_two_complete_credentials_per_page_with_an_odd_remainder(): void
+    {
+        $first = $this->inscripcion($this->persona());
+        $second = Inscripcion::create(['persona_id' => $this->persona('7654321')->id, 'evento_id' => $first->evento_id, 'cargo' => 'Participante']);
+        $third = Inscripcion::create(['persona_id' => $this->persona('5555555')->id, 'evento_id' => $first->evento_id, 'cargo' => 'Participante']);
+        $response = $this->post(route('inscripciones.credenciales-lote'), [
+            'evento_id' => $first->evento_id, 'inscripciones' => [$first->id, $second->id, $third->id],
+        ])->assertOk();
+
+        $html = new \DOMDocument;
+        @$html->loadHTML($response->getContent());
+        $xpath = new \DOMXPath($html);
+        $pages = $xpath->query('//div[contains(concat(" ", normalize-space(@class), " "), " batch-page ")]');
+        $this->assertCount(2, $pages);
+        $this->assertSame(2, $xpath->query('./div[contains(@class, "credential-sheet")]', $pages->item(0))->length);
+        $this->assertSame(1, $xpath->query('./div[contains(@class, "credential-sheet")]', $pages->item(1))->length);
+        $this->assertSame(6, $xpath->query('//div[contains(@class, "batch-page")]//article[contains(@class, "credential-card")]')->length);
+        $pdf = $this->post(route('inscripciones.credenciales-lote'), [
+            'evento_id' => $first->evento_id, 'inscripciones' => [$first->id, $second->id, $third->id], 'pdf' => 1,
+        ])->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $pdf->getContent());
+        $this->assertSame(2, preg_match_all('/\/Type\s*\/Page\b/', $pdf->getContent()));
+        $this->assertStringContainsString('/BM /Multiply', $pdf->getContent());
+    }
+
     public function test_batch_requires_distinct_registrations_from_the_selected_event_and_preserves_individual_printing(): void
     {
         $first = $this->inscripcion($this->persona());
@@ -39,6 +64,26 @@ class CredencialTest extends TestCase
     {
         $grado = Grado::firstOrCreate(['nombre' => 'Dan']);
         return Persona::create(['primer_nombre' => 'Ana', 'primer_apellido' => 'Pérez', 'documento_identidad' => $documento, 'sexo' => 'Femenino', 'telefono' => '70012345', 'grado_id' => $grado->id]);
+    }
+
+    public function test_file_card_shows_country_and_flag_in_admin_and_public_verification(): void
+    {
+        $persona = $this->persona();
+        $bolivia = \App\Models\Pais::firstOrCreate(['nombre' => 'Bolivia']);
+        $persona->update(['pais_id' => $bolivia->id]);
+        $inscripcion = $this->inscripcion($persona);
+        $admin = $this->get(route('inscripciones.credencial', $inscripcion))->assertOk();
+        $admin->assertSee('credential-file-country')->assertSee('Bandera de Bolivia');
+        $url = $admin->viewData('verificacionUrl');
+        auth()->logout();
+        $this->get($url)->assertOk()->assertSee('credential-file-country')->assertSee('Bandera de Bolivia')
+            ->assertSee('images/banderas/bo.svg', false);
+
+        $otro = \App\Models\Pais::firstOrCreate(['nombre' => 'Uruguay']);
+        $persona->update(['pais_id' => $otro->id]);
+        $this->get($url)->assertOk()->assertSee('credential-file-country')->assertSee('Uruguay')->assertDontSee('Bandera de Uruguay');
+        $persona->update(['pais_id' => null]);
+        $this->get($url)->assertOk()->assertDontSee('credential-file-country');
     }
 
     private function inscripcion(Persona $persona, string $nombre = 'Seminario Internacional'): Inscripcion
