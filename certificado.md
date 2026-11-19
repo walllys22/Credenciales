@@ -119,11 +119,38 @@ superadmin activo; las operaciones críticas usan transacción y bloqueo.
   archivo original se conserva y su URL se versiona por fecha de modificación.
   Su posición vertical se ajusta con `top:78%` en `.certificate-signature`.
 - CSS: `public/css/certificados.css`. Nombre en top 47%, left 21%, width 58%;
-  tamaño impreso 22 pt, alineado a la izquierda. La vista previa escala el nombre y comparte la caja de impresión; la plantilla ocupa aproximadamente el 102,305 % del ancho de la caja (301,8 mm impresos).
-- Impresión: hoja horizontal de 296 × 211 mm y caja de certificado de 295 × 210 mm, centrada en ambos ejes mediante flex, con margen de página CSS 0. La imagen, también centrada, sobresale 2,9 mm a cada lado de la hoja.
+  tamaño impreso 22 pt, alineado a la izquierda. La vista previa escala el nombre y muestra la plantilla ajustada a toda la caja.
+- Impresión: hoja horizontal de 296 × 211 mm y área fija de una página, sin margen CSS. La caja y la imagen ocupan el 100 % de esa área; la imagen se adapta a la proporción de la hoja.
   Márgenes físicos y calidad final dependen del controlador de impresora.
 - `public/js/certificados.js` espera fuentes e imágenes antes de window.print().
 - No se genera un PDF persistido ni se registra entrega al imprimir.
+
+### 19/11/2026: certificado a página completa en una hoja
+
+La plantilla y la caja ocupan el 100 % del área fija de impresión; la vista
+previa usa la proporción 296:211 de la hoja. Se eliminó la ampliación horizontal
+que desbordaba los lados. La imagen se adapta a la proporción de la página;
+el nombre y la firma conservan sus posiciones relativas. Archivos:
+`public/css/certificados.css` y `certificado.md`.
+
+Verificaciones de esta tarea: Chrome sin interfaz generó un PDF de prueba con
+la estructura del certificado, los CSS compartidos y las imágenes; se comprobó
+una página de 839,04 × 598,08 puntos (aproximadamente 296 × 211 mm) y tres
+imágenes incrustadas. `git diff --check` correcto. El control interactivo no
+estaba disponible y no se hizo una impresión física. La prueba no utilizó una
+sesión real ni el controlador Epson; para ocupar físicamente los bordes, el
+papel y la configuración del controlador deben coincidir y la impresora debe
+admitir impresión sin bordes. En caso contrario prevalecen sus márgenes físicos.
+
+### 19/11/2026: evitar una segunda hoja en blanco
+
+El área de impresión se fija a los límites de la hoja y recorta el desbordamiento,
+para evitar que su altura genere otra página. Conserva el centrado horizontal y
+vertical y las medidas del certificado. La imagen sigue siendo más ancha que la
+hoja y sus extremos pueden recortarse. Archivos: `public/css/certificados.css`
+y `certificado.md`. Verificación: `git diff --check` correcto. Se intentó
+generar un PDF de prueba con Edge sin obtener el archivo; no se pudo confirmar
+el número de páginas ni realizar impresión física o revisión interactiva.
 
 ### 19/11/2026: centrado del certificado en la hoja
 

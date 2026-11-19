@@ -3,9 +3,9 @@
 }
 @font-face{font-family:'Agnesa Kyoto';src:url('../fonts/agnesa-kyoto.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
 .certificate-stage{width:100%;max-width:1000px;margin:0 auto;overflow-x:auto}
-.certificate{position:relative;container-type:inline-size;aspect-ratio:295 / 210;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
-/* Imagen centrada en ambos ejes; ancho impreso aproximado de 301,8 mm. */
-.certificate-template{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:block;width:102.305085%;height:100%;object-fit:fill}
+.certificate{position:relative;container-type:inline-size;aspect-ratio:296 / 211;width:100%;min-width:620px;margin:0;color:#111;background:#fff;box-shadow:0 3px 12px #0002}
+/* La plantilla cubre toda la caja del certificado, sin desbordarse. */
+.certificate-template{position:absolute;top:0;left:0;display:block;width:100%;height:100%;object-fit:fill}
 .certificate-signature{
     position:absolute;
     /* Posición de la firma sobre el certificado: left desplaza horizontalmente. */
@@ -50,12 +50,12 @@
     .sidebar,.topbar,.page-heading,.content-footer,.alert{display:none!important}
     .app-shell,.main-shell,body.sidebar-collapsed .main-shell{display:block!important;margin:0!important;min-height:0!important;width:auto!important}
     #main-content{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
-    /* La caja ocupa la hoja y centra el certificado en ambos ejes. */
-    .certificate-stage{width:296mm!important;height:211mm!important;max-width:none!important;margin:0!important;display:flex;align-items:center;justify-content:center;overflow:visible!important}
-    /* Tamaño impreso del certificado: width = ancho; height = alto. */
+    /* El área fija ocupa únicamente la página y evita contenido en una segunda hoja. */
+    .certificate-stage{position:fixed;inset:0;width:100%!important;height:100%!important;max-width:none!important;margin:0!important;display:flex;align-items:center;justify-content:center;overflow:hidden!important}
+    /* El certificado y su imagen llenan el área de la página. */
     .certificate{
-        width:295mm!important;
-        height:210mm!important;
+        width:100%!important;
+        height:100%!important;
         min-width:0!important;
         flex:none;
         box-shadow:none;
