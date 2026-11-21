@@ -1423,17 +1423,18 @@ importe original; los Bs se dividen por el tipo de cambio. Se conserva precisió
 intermedia para que Bs 500 de una tarifa de USD 50 a Bs 12/USD dejen USD 8,33
 y Bs 100,00. La lista, el detalle, el historial y el reporte presentan el saldo
 en ambas monedas cuando el evento tiene tipo de cambio. Los importes recibidos
-siguen mostrándose en su moneda original. El saldo en Bs usa el tipo vigente del
-evento. Un pago nuevo en Bs guarda su tipo de cambio; los pagos antiguos en Bs
-sin tipo propio usan el tipo vigente del evento, pues no se guardó uno histórico.
+siguen mostrándose en su moneda original. Todos los pagos en Bs, antiguos y nuevos,
+y el saldo en Bs usan el tipo vigente del evento, incluso si el pago conserva un
+tipo histórico. Al editar el tipo del evento se recalculan los saldos.
 Los pagos anteriores en USD usan monto_original, independientemente del monto
 en Bs que se guardó al registrarlos. Los descuentos antiguos en Bs se convierten
-con el tipo guardado o, si no existe, el vigente del evento. La nueva columna
+con el tipo vigente del evento. Los descuentos ya registrados en USD mantienen
+su importe en dólares. La nueva columna
 descuento_usd guarda descuentos nuevos con precisión suficiente; la migración
 aditiva 2026_11_21_000001 se aplicó a la base MySQL local configurada.
 No se reescribieron los pagos existentes. Cuando no existe un tipo positivo,
-no se aceptan pagos nuevos en Bs y no se puede calcular un importe histórico en
-Bs que no tenga tipo propio; es necesario configurar el tipo del evento. Las
+no se aceptan pagos nuevos en Bs y no se puede calcular un importe en Bs;
+es necesario configurar el tipo del evento. Las
 tarifas antiguas sin costo USD también requieren tipo para convertir su costo Bs.
 En otras instalaciones hay que aplicar la migración antes de usar esta versión.
 
@@ -1444,6 +1445,19 @@ y datos de prueba siguen suponiendo saldos en Bs o pagos en Bs sin tipo. Esa
 ejecución fue anterior al ajuste de compatibilidad de tarifas históricas; queda
 pendiente actualizar y volver a ejecutar esas pruebas. No hubo revisión visual
 interactiva ni despliegue al sitio remoto.
+
+### 21/11/2026: tipo de cambio vigente del evento para todos los pagos
+
+Por aclaración del usuario, el tipo del evento reemplaza también a los tipos
+históricos almacenados en pagos: al cambiarlo se recalculan los pagos y descuentos
+en Bs, así como los saldos, sin modificar los registros de pagos. Los descuentos
+registrados en USD conservan su valor nominal. Archivos: `app/Models/Pago.php`,
+`resources/views/inscripciones/pagos.blade.php`,
+`tests/Feature/SaldoEnDolaresTest.php` y `certificado.md`. Verificaciones:
+SaldoEnDolaresTest, 5 pruebas y 41 aserciones aprobadas; sintaxis PHP,
+compilación y limpieza de Blade y `git diff --check` correctos. No se repitió
+la suite anterior, cuyas pruebas pendientes de actualización se indican arriba;
+sin revisión visual ni despliegue al sitio remoto.
 
 ## Actualización del acceso e identidad (12/11/2026)
 

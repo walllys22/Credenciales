@@ -29,7 +29,7 @@ class Pago extends Model
     {
         $importe = \Brick\Math\BigDecimal::of($monto);
         if ($importe->isZero()) return $importe->toScale(2);
-        $tipo = $this->tipo_cambio ?: $tipoEvento;
+        $tipo = $tipoEvento;
         if (!$tipo || $tipo <= 0) throw new \RuntimeException('Falta el tipo de cambio para convertir un importe en bolivianos.');
         return $importe->dividedBy((string) $tipo, 8, \Brick\Math\RoundingMode::HalfUp);
     }

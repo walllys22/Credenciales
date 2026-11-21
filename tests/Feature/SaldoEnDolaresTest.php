@@ -37,7 +37,7 @@ class SaldoEnDolaresTest extends AuthenticatedTestCase
         $this->get(route('inscripciones.imprimir', ['evento_id' => $inscripcion->evento_id]))->assertOk()->assertSee('100.00')->assertSee('8.33');
     }
 
-    public function test_nuevos_pagos_mixtos_conservan_tipo_y_descuento(): void
+    public function test_nuevos_pagos_mixtos_usan_tipo_del_evento_y_descuento(): void
     {
         $inscripcion = $this->crearInscripcion();
         $url = route('inscripciones.pagos.store', $inscripcion);
@@ -45,13 +45,25 @@ class SaldoEnDolaresTest extends AuthenticatedTestCase
         $this->post($url, ['moneda' => 'USD', 'monto' => '40', 'fecha' => '2026-01-02'])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('pagos', ['inscripcion_id' => $inscripcion->id, 'moneda' => 'USD', 'monto' => '40', 'monto_original' => '40']);
         $inscripcion->evento->update(['tipo_cambio' => '15']);
-        $this->get($url)->assertOk()->assertViewHas('saldoPendiente', fn ($saldo) => (float) $saldo === 0.0);
+        $this->get($url)->assertOk()->assertSee('$us 2,00 / Bs 30,00')->assertSee('TC 15,00');
+        $this->get(route('inscripciones.index', ['evento_id' => $inscripcion->evento_id]))->assertOk()->assertSee('$us 2,00 / Bs 30,00');
         $inscripcion2 = $this->crearInscripcion();
         $url2 = route('inscripciones.pagos.store', $inscripcion2);
         $this->post($url2, ['moneda' => 'BOB', 'monto' => '100', 'fecha' => '2026-01-01', 'pago_total' => 1])->assertSessionHasNoErrors();
         $this->get($url2)->assertOk()->assertViewHas('saldoPendiente', fn ($saldo) => (float) $saldo === 0.0);
         $this->delete(route('inscripciones.pagos.destroy', [$inscripcion2, $inscripcion2->pagos()->first()]))->assertRedirect();
         $this->get($url2)->assertOk()->assertViewHas('saldoPendiente', '50.00');
+    }
+
+    public function test_pago_y_descuento_historico_utilizan_el_tipo_vigente_del_evento(): void
+    {
+        $inscripcion = $this->crearInscripcion();
+        $inscripcion->pagos()->create(['moneda' => 'BOB', 'monto' => '240', 'descuento' => '120', 'tipo_cambio' => '10', 'fecha' => '2026-01-01']);
+        $this->get(route('inscripciones.pagos.create', $inscripcion))->assertOk()
+            ->assertSee('$us 20,00 / Bs 240,00')->assertSee('Equivale a $us 20,00')->assertSee('TC 12,00');
+        $inscripcion->evento->update(['tipo_cambio' => '15']);
+        $this->get(route('inscripciones.pagos.create', $inscripcion))->assertOk()
+            ->assertSee('$us 26,00 / Bs 390,00')->assertSee('Equivale a $us 16,00')->assertSee('TC 15,00');
     }
 
     public function test_pago_en_dolares_no_necesita_tipo_de_cambio(): void

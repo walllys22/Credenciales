@@ -75,7 +75,7 @@
 @endif
 
 <section class="panel">
-    <div class="panel-toolbar"><div><h2>Historial de pagos</h2><p>Los pagos en bolivianos se convierten a dólares con el tipo de cambio correspondiente.</p></div></div>
+    <div class="panel-toolbar"><div><h2>Historial de pagos</h2><p>Los pagos en bolivianos se convierten a dólares con el tipo de cambio vigente del evento.</p></div></div>
     <div class="table-responsive">
         <table class="table align-middle">
             <thead><tr><th>Fecha</th><th>Monto pagado</th><th>Saldo pendiente</th><th>Observación</th><th class="text-end">Acciones</th></tr></thead>
@@ -88,7 +88,7 @@
                                 USD {{ number_format($pago->monto_original, 2, ',', '.') }}
                             @else
                                 Bs {{ number_format($pago->monto, 2, ',', '.') }}
-                                <small class="d-block">Equivale a $us {{ number_format($pago->importe_usd, 2, ',', '.') }} · TC {{ number_format($pago->tipo_cambio ?: $inscripcion->evento->tipo_cambio, 2, ',', '.') }}</small>
+                                <small class="d-block">Equivale a $us {{ number_format($pago->importe_usd, 2, ',', '.') }} · TC {{ number_format($inscripcion->evento->tipo_cambio, 2, ',', '.') }}</small>
                             @endif
                         </td>
                         <td class="text-nowrap">$us {{ number_format($pago->saldo_pendiente, 2, ',', '.') }}@if($inscripcion->evento->tipo_cambio)<br>Bs {{ number_format($pago->saldo_pendiente * $inscripcion->evento->tipo_cambio, 2, ',', '.') }}@endif</td>
@@ -124,7 +124,7 @@
                         <dt>Fecha</dt><dd>{{ $pago->fecha->format('d/m/Y') }}</dd>
                         <dt>Monto pagado</dt><dd>{{ $pago->moneda === 'USD' ? 'USD '.number_format($pago->monto_original, 2, ',', '.') : 'Bs '.number_format($pago->monto, 2, ',', '.') }}</dd>
                         @if($pago->moneda === 'BOB')
-                            <dt>Tipo de cambio</dt><dd>Bs {{ number_format($pago->tipo_cambio ?: $inscripcion->evento->tipo_cambio, 2, ',', '.') }} por dólar</dd>
+                            <dt>Tipo de cambio del evento</dt><dd>Bs {{ number_format($inscripcion->evento->tipo_cambio, 2, ',', '.') }} por dólar</dd>
                             <dt>Equivalente</dt><dd>$us {{ number_format($pago->importe_usd, 2, ',', '.') }}</dd>
                         @endif
                         <dt>Observación</dt><dd>{{ $pago->observacion ?: 'Sin observación' }}</dd>
