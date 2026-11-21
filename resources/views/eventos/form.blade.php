@@ -16,7 +16,7 @@
         <div class="flex-grow-1">
             <input type="file" id="imagen" name="imagen" class="form-control @error('imagen') is-invalid @enderror" accept="image/jpeg,image/png,image/webp,image/gif" aria-describedby="imagen-help">
             @error('imagen')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            <p class="form-text" id="imagen-help">Opcional. JPG, PNG, WEBP o GIF. Máximo 5 MB y 6000 × 6000 píxeles. Si no eliges otra imagen, se conserva la actual.</p>
+            <p class="form-text" id="imagen-help">Opcional. JPG, PNG, WEBP o GIF. Máximo 10 MB y 12000 × 12000 píxeles. Si no eliges otra imagen, se conserva la actual.</p>
             <p class="text-danger small" id="imagen-client-error" role="alert" hidden></p>
             @if($evento->imagen)
                 <div class="form-check mt-2"><input class="form-check-input" type="checkbox" value="1" id="quitar_imagen" name="quitar_imagen" @checked(old('quitar_imagen'))><label for="quitar_imagen" class="form-check-label">Quitar imagen actual</label></div>

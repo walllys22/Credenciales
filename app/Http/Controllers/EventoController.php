@@ -37,7 +37,7 @@ class EventoController extends Controller
             'fecha_final' => 'required|date|after_or_equal:fecha_inicio', 'lugar' => 'required|string|max:255', 'ciudad' => 'required|string|max:255',
             'tipo_cambio' => [(!$evento->exists || $evento->tipo_cambio !== null) ? 'required' : 'nullable', 'numeric', 'gt:0', 'max:999999.99', 'decimal:0,2'],
             'costos_usd' => 'required|array', 'costos_usd.*' => 'nullable|numeric|min:0|max:9999999999.99|decimal:0,2',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120|dimensions:max_width=6000,max_height=6000',
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240|dimensions:max_width=12000,max_height=12000',
             'quitar_imagen' => 'sometimes|boolean',
         ]);
         $tarifas = [];

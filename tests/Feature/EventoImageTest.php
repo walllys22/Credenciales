@@ -45,11 +45,20 @@ class EventoImageTest extends TestCase
         Storage::fake('local'); $data = $this->data();
         $this->post('/eventos', $data + ['imagen' => UploadedFile::fake()->image('original.png')])->assertSessionHasNoErrors();
         $evento = Evento::firstOrFail(); $original = $evento->imagen;
-        foreach ([UploadedFile::fake()->create('archivo.txt', 1, 'text/plain'), UploadedFile::fake()->image('grande.jpg')->size(5121)] as $file) {
+        foreach ([UploadedFile::fake()->create('archivo.txt', 1, 'text/plain'), UploadedFile::fake()->image('grande.jpg')->size(10241), UploadedFile::fake()->image('ancha.png', 12001, 1)] as $file) {
             $this->put("/eventos/{$evento->id}", $data + ['imagen' => $file])->assertSessionHasErrors('imagen');
             $this->assertSame($original, $evento->fresh()->imagen);
         }
         $this->assertCount(1, Storage::disk('local')->allFiles('eventos'));
+    }
+
+    public function test_image_at_new_weight_and_dimension_limits_is_accepted(): void
+    {
+        Storage::fake('local');
+        $this->post('/eventos', $this->data() + ['imagen' => UploadedFile::fake()->image('limite.png', 12000, 1)->size(10240)])
+            ->assertSessionHasNoErrors()->assertRedirect('/eventos');
+        Storage::disk('local')->assertExists(Evento::firstOrFail()->imagen);
+        $this->get('/eventos/create')->assertOk()->assertSee('Máximo 10 MB y 12000 × 12000 píxeles');
     }
 
     public function test_event_deletion_removes_image_and_missing_file_has_fallback(): void

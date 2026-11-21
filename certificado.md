@@ -1408,6 +1408,7 @@ repitió la suite PHP por tratarse de un control visual sin cambios de autentica
 
 | Fecha | Cambio | Archivos principales |
 | --- | --- | --- |
+| 2026-11-21 | Imagen de evento: límite de 10 MB y 12000 × 12000 píxeles; configuración requerida en servidor documentada. | EventoController.php, eventos/form.blade.php, EventoImageTest.php, docs/carga-imagenes-servidor.md, certificado.md |
 | 2026-11-21 | Saldo calculado en dólares y mostrado también en bolivianos; pagos USD directos y Bs convertidos. Detalles y verificaciones en la sección siguiente. | Inscripcion.php, Pago.php, PagoController.php, InscripcionController.php, vistas de inscripción y pagos, migración de descuento, SaldoEnDolaresTest.php, certificado.md |
 | 2026-11-20 | Nombre completo de la organización en la tabla de inscripciones para la coincidencia exacta. Compilación y limpieza Blade y `git diff --check` correctos. Sin revisión visual ni pruebas automatizadas nuevas por ser un ajuste de presentación; la base MySQL local no estaba disponible. | resources/views/inscripciones/index.blade.php, certificado.md |
 | 2026-11-12 | Registrada la obligación de actualizar esta memoria en cada cambio. Revisión documental; no requiere pruebas de aplicación. | AGENTS.md, certificado.md |
@@ -1458,6 +1459,19 @@ SaldoEnDolaresTest, 5 pruebas y 41 aserciones aprobadas; sintaxis PHP,
 compilación y limpieza de Blade y `git diff --check` correctos. No se repitió
 la suite anterior, cuyas pruebas pendientes de actualización se indican arriba;
 sin revisión visual ni despliegue al sitio remoto.
+
+### 21/11/2026: imágenes de evento al doble del límite anterior
+
+El formulario y la validación del servidor de la aplicación admiten hasta 10 MB
+y 12000 × 12000 píxeles para la imagen del evento, frente a los 5 MB y
+6000 × 6000 anteriores. La foto del participante conserva sus propios límites.
+EventoImageTest: 5 pruebas y 60 aserciones aprobadas, incluidos los límites de
+peso y dimensiones y el rechazo de archivos mayores. La configuración de Nginx
+y PHP-FPM requerida está en `docs/carga-imagenes-servidor.md`. No se dispone
+de la configuración del servidor remoto en este proyecto ni se ha desplegado o
+cambiado allí: hasta ajustar sus límites puede persistir el error HTTP 413.
+No se ha comprobado una carga real en el servidor remoto. Sintaxis PHP,
+compilación y limpieza de Blade y `git diff --check` correctos.
 
 ## Actualización del acceso e identidad (12/11/2026)
 
