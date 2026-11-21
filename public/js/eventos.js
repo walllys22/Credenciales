@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (objectUrl) URL.revokeObjectURL(objectUrl);
         objectUrl = null;
         const file = input.files[0];
-        const valid = !file || (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) && file.size <= 5 * 1024 * 1024);
+        const valid = !file || (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) && file.size <= 10 * 1024 * 1024);
         error.hidden = true;
-        error.textContent = valid ? '' : 'Selecciona una imagen JPG, PNG, WEBP o GIF de hasta 5 MB.';
+        error.textContent = valid ? '' : 'Selecciona una imagen JPG, PNG, WEBP o GIF de hasta 10 MB.';
         if (!valid) { input.value = ''; window.showAppMessage?.(error.textContent); }
         if (valid && file) { objectUrl = URL.createObjectURL(file); if (remove) remove.checked = false; }
         preview.src = objectUrl || preview.dataset.original;

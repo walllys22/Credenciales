@@ -51,3 +51,10 @@ test('rate is limited to two decimals and immediately recalculates both amounts'
     assert.equal(tipoCambio.value, '12.00');
     assert.equal(rows[0].bs.value, '600.00');
 });
+
+test('category table recalculates the three displayed tariffs', () => {
+    const { tipoCambio, rows } = form('11.70', ['30', '50', '100']);
+    assert.deepEqual(rows.map(row => row.bs.value), ['351.00', '585.00', '1170.00']);
+    tipoCambio.value = '12'; tipoCambio.listeners.change();
+    assert.deepEqual(rows.map(row => row.bs.value), ['360.00', '600.00', '1200.00']);
+});

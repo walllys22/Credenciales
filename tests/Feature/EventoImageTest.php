@@ -61,6 +61,45 @@ class EventoImageTest extends TestCase
         $this->get('/eventos/create')->assertOk()->assertSee('Máximo 10 MB y 12000 × 12000 píxeles');
     }
 
+    public function test_edit_shows_costs_by_category_and_preserves_other_tariffs(): void
+    {
+        $grado = Grado::create(['nombre' => '1er Dan']);
+        $data = $this->data();
+        $customId = array_key_first($data['costos_usd']);
+        $data['costos_usd'][$grado->id] = '50.00';
+        $data['tipo_cambio'] = '11.70';
+        $this->post('/eventos', $data)->assertSessionHasNoErrors();
+        $evento = Evento::firstOrFail();
+        $this->get("/eventos/{$evento->id}/edit")->assertOk()
+            ->assertSee('Costo por categoría')->assertSeeInOrder(['Categoría', 'Costo $us', 'Costo Bs.-', 'Kyu', 'Dan', 'Jefes de Dojo'])
+            ->assertDontSee('Costo en dólares</label>', false)->assertSee('value="75.00"', false);
+        $data['tipo_cambio'] = '12.00';
+        $this->put("/eventos/{$evento->id}", $data)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('evento_grado', ['evento_id' => $evento->id, 'grado_id' => $customId, 'costo_usd' => '75.00', 'costo' => '900.00']);
+        $this->assertDatabaseHas('evento_grado', ['evento_id' => $evento->id, 'grado_id' => $grado->id, 'costo_usd' => '50.00', 'costo' => '600.00']);
+    }
+
+    public function test_new_event_shows_categories_and_saves_their_tariffs(): void
+    {
+        $kyu = Grado::create(['nombre' => '10mo Kyu']);
+        $dan = Grado::create(['nombre' => '1er Dan']);
+        $adicional = Grado::create(['nombre' => '8vo Kyu']);
+        $this->get('/eventos/create')->assertOk()->assertSee('Costo por categoría')
+            ->assertSeeInOrder(['Categoría', 'Costo $us', 'Costo Bs.-', 'Kyu', 'Dan', 'Jefes de Dojo'])
+            ->assertDontSee('Costo en dólares</label>', false)
+            ->assertSee('name="costos_usd['.$kyu->id.']" value="30.00"', false)
+            ->assertSee('name="costos_usd['.$dan->id.']" value="50.00"', false)
+            ->assertSee('name="costos_usd['.$adicional->id.']" value="30.00"', false);
+        $data = $this->data();
+        $data['tipo_cambio'] = '12.00';
+        $data['costos_usd'] = [$kyu->id => '30.00', $dan->id => '50.00', $adicional->id => '30.00'];
+        $this->post('/eventos', $data)->assertSessionHasNoErrors()->assertRedirect('/eventos');
+        $evento = Evento::firstOrFail();
+        foreach ([[$kyu, '30.00', '360.00'], [$dan, '50.00', '600.00'], [$adicional, '30.00', '360.00']] as [$grado, $usd, $bs]) {
+            $this->assertDatabaseHas('evento_grado', ['evento_id' => $evento->id, 'grado_id' => $grado->id, 'costo_usd' => $usd, 'costo' => $bs]);
+        }
+    }
+
     public function test_event_deletion_removes_image_and_missing_file_has_fallback(): void
     {
         Storage::fake('local');

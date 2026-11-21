@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('section', 'Evento')
 @section('title', $evento->exists ? 'Editar evento' : 'Nuevo evento')
-@section('subtitle', 'Define los detalles del encuentro y las tarifas para cada grado.')
+@section('subtitle', 'Define los detalles del encuentro y las tarifas del evento.')
 @section('actions')<a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="back" aria-label="Volver a eventos" title="Volver a eventos"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span class="button-label">Volver a eventos</span></a>@endsection
 @section('content')
 <form method="POST" enctype="multipart/form-data" action="{{ $evento->exists ? route('eventos.update', $evento) : route('eventos.store') }}" class="panel form-panel">
@@ -29,7 +29,7 @@
 <x-field class="col-md-6" name="lugar" label="Lugar" :value="$evento->lugar" :required="true" maxlength="255"/>
 <x-field class="col-md-6" name="ciudad" label="Ciudad" :value="$evento->ciudad" :required="true" maxlength="255"/>
 </div>
-<div class="form-section-heading mt-4"><span class="step-number">02</span><div><h2>Costo por grado</h2><p>Ingresa el costo en $us. El importe en Bs.- se calcula multiplicando por el tipo de cambio. Usa 0 para acceso gratuito; deja vacío si el grado no participa.</p></div></div>
+<div class="form-section-heading mt-4"><span class="step-number">02</span><div><h2>Costo por categoría</h2><p>Las tarifas por categoría se muestran en dólares y en bolivianos según el tipo de cambio.</p></div></div>
 <div class="row"><div class="col-md-6 mb-4">
     <label for="tipo_cambio" class="form-label">Tipo de cambio (Bs.- por 1 $us) <span class="required">*</span></label>
     <input type="number" id="tipo_cambio" name="tipo_cambio" min="0.01" max="999999.99" step="0.01" class="form-control @error('tipo_cambio') is-invalid @enderror" value="{{ old('tipo_cambio', $evento->tipo_cambio) }}" @required(!$evento->exists || $evento->tipo_cambio !== null) placeholder="0.00">
@@ -38,20 +38,30 @@
 @if($evento->exists && $evento->tipo_cambio === null)
 <p class="form-text mb-3">Este evento tiene tarifas anteriores en Bs.-. Se conservarán hasta que ingreses el tipo de cambio y los costos en dólares.</p>
 @endif
-<div class="row">
+{{-- Conservar los costos personalizados de grados anteriores al guardar el evento. --}}
+@error('costos_usd')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+@if($evento->exists && $evento->grados->contains(fn ($grado) => !in_array($grado->nombre, \App\Models\Grado::DETALLADOS, true)))
+<p class="form-text">Las tarifas personalizadas anteriores se conservan al guardar.</p>
+@endif
 @foreach($grados as $grado)
-@php($tarifa = $evento->grados->firstWhere('id', $grado->id)?->pivot)
-@php($fijo = in_array($grado->nombre, \App\Models\Grado::DETALLADOS, true))
-@php($costoUsd = $fijo ? $grado->costoBaseUsd() : ($tarifa?->costo_usd !== null ? number_format((float) $tarifa->costo_usd, 2, '.', '') : ''))
-@php($costoBs = $tarifa ? number_format((float) $tarifa->costo, 2, '.', '') : '')
-<div class="col-md-6 mb-4" data-tarifa-grado>
-    <h3 class="h6 mb-2">{{ $grado->nombre }}</h3>
-    <label for="costo-usd-{{ $grado->id }}" class="form-label">Costo en dólares</label>
-    <div class="input-group mb-2"><span class="input-group-text">$us</span><input id="costo-usd-{{ $grado->id }}" name="costos_usd[{{ $grado->id }}]" data-costo-usd type="number" min="0" max="9999999999.99" step="0.01" class="form-control @error('costos_usd.'.$grado->id) is-invalid @enderror" value="{{ $fijo ? $costoUsd : old('costos_usd.'.$grado->id, $costoUsd) }}" @readonly($fijo) placeholder="Sin tarifa">@error('costos_usd.'.$grado->id)<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-    <label for="costo-bs-{{ $grado->id }}" class="form-label">Costo en bolivianos (calculado)</label>
-    <div class="input-group"><span class="input-group-text">Bs.-</span><input id="costo-bs-{{ $grado->id }}" data-costo-bs data-anterior="{{ $evento->tipo_cambio === null ? $costoBs : '' }}" type="text" class="form-control bg-light" value="{{ $costoBs }}" readonly placeholder="Sin tarifa" aria-live="polite"></div>
-</div>
+    @php($tarifa = $evento->grados->firstWhere('id', $grado->id)?->pivot)
+    @php($costoUsd = in_array($grado->nombre, \App\Models\Grado::DETALLADOS, true) || (!$evento->exists && $grado->categoria()) ? $grado->costoBaseUsd() : ($tarifa?->costo_usd !== null ? number_format((float) $tarifa->costo_usd, 2, '.', '') : ''))
+    <input type="hidden" name="costos_usd[{{ $grado->id }}]" value="{{ old('costos_usd.'.$grado->id, $costoUsd) }}">
+    @error('costos_usd.'.$grado->id)<div class="alert alert-danger" role="alert">{{ $grado->nombre }}: {{ $message }}</div>@enderror
 @endforeach
+<div class="table-responsive">
+    <table class="table table-bordered align-middle">
+        <thead><tr><th>Categoría</th><th class="text-end">Costo $us</th><th class="text-end">Costo Bs.-</th></tr></thead>
+        <tbody>
+        @foreach(['Kyu' => '30.00', 'Dan' => '50.00', 'Jefes de Dojo' => '100.00'] as $categoria => $costo)
+            <tr data-tarifa-grado>
+                <td>{{ $categoria }}</td>
+                <td class="text-end">$us {{ number_format((float) $costo, 2, ',', '.') }}<input type="hidden" data-costo-usd value="{{ $costo }}"></td>
+                <td class="text-end"><div class="input-group justify-content-end"><span class="input-group-text">Bs.-</span><input data-costo-bs type="text" class="form-control bg-light text-end" style="max-width: 12rem" readonly aria-label="Costo en bolivianos de {{ $categoria }}" aria-live="polite" placeholder="Sin tipo de cambio"></div></td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
 </div>
 @if($grados->isEmpty())<div class="alert alert-warning">Debes <a href="{{ route('grados.index') }}">agregar al menos un grado</a> para configurar las tarifas.</div>@endif
 <div class="form-actions"><a href="{{ route('eventos.index') }}" class="btn btn-outline-secondary btn-project" data-action-style="cancel" aria-label="Cancelar" title="Cancelar"><i class="fa-solid fa-ban" aria-hidden="true"></i><span class="button-label">Cancelar</span></a><button class="btn btn-primary btn-project" @disabled($grados->isEmpty()) data-action-style="save" aria-label="{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}" title="{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i><span class="button-label">{{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}</span></button></div>

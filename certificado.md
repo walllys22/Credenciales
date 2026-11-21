@@ -1408,6 +1408,7 @@ repitió la suite PHP por tratarse de un control visual sin cambios de autentica
 
 | Fecha | Cambio | Archivos principales |
 | --- | --- | --- |
+| 2026-11-21 | Edición de eventos con tabla de costos por categoría; corregido límite de imagen de 10 MB en JavaScript. | eventos/form.blade.php, public/js/eventos.js, EventoImageTest.php, eventos-costos.test.cjs, certificado.md |
 | 2026-11-21 | Imagen de evento: límite de 10 MB y 12000 × 12000 píxeles; configuración requerida en servidor documentada. | EventoController.php, eventos/form.blade.php, EventoImageTest.php, docs/carga-imagenes-servidor.md, certificado.md |
 | 2026-11-21 | Saldo calculado en dólares y mostrado también en bolivianos; pagos USD directos y Bs convertidos. Detalles y verificaciones en la sección siguiente. | Inscripcion.php, Pago.php, PagoController.php, InscripcionController.php, vistas de inscripción y pagos, migración de descuento, SaldoEnDolaresTest.php, certificado.md |
 | 2026-11-20 | Nombre completo de la organización en la tabla de inscripciones para la coincidencia exacta. Compilación y limpieza Blade y `git diff --check` correctos. Sin revisión visual ni pruebas automatizadas nuevas por ser un ajuste de presentación; la base MySQL local no estaba disponible. | resources/views/inscripciones/index.blade.php, certificado.md |
@@ -1459,6 +1460,24 @@ SaldoEnDolaresTest, 5 pruebas y 41 aserciones aprobadas; sintaxis PHP,
 compilación y limpieza de Blade y `git diff --check` correctos. No se repitió
 la suite anterior, cuyas pruebas pendientes de actualización se indican arriba;
 sin revisión visual ni despliegue al sitio remoto.
+
+### 21/11/2026: tabla de categorías al editar eventos
+
+La edición sustituye los campos visibles de cada grado por una tabla con Kyu
+USD 30, Dan USD 50 y Jefes de Dojo USD 100, y el importe en Bs se actualiza al
+modificar el tipo de cambio. Las tarifas por grado se envían ocultas para
+conservar las tarifas personalizadas existentes al guardar; se avisa si las
+hay. Esas tarifas personalizadas no se pueden editar desde esta tabla y pueden
+ser distintas de los precios estándar presentados. La creación conserva sus
+campos anteriores. Se corrigió además el límite de 5 MB que permanecía en el
+JavaScript de la imagen: ahora coincide con los 10 MB del formulario. Sigue
+siendo necesario ajustar Nginx y PHP-FPM en el servidor remoto para evitar 413.
+Verificaciones: EventoImageTest, 6 pruebas y 69 aserciones aprobadas, incluida
+la presentación y conservación de una tarifa personalizada; JavaScript de
+costos, 4 pruebas aprobadas, incluyendo los tres importes a tipos 11,70 y 12.
+Sintaxis JavaScript, compilación y limpieza Blade y `git diff --check` correctos.
+Sin revisión visual interactiva ni despliegue al sitio remoto; no se repitió
+la suite completa, que tiene pendientes históricos documentados.
 
 ### 21/11/2026: imágenes de evento al doble del límite anterior
 
