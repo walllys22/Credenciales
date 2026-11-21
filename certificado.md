@@ -1,6 +1,6 @@
 # Memoria técnica de Credencial
 
-Actualizada: 19 de noviembre de 2026 (America/La_Paz).
+Actualizada: 21 de noviembre de 2026 (America/La_Paz).
 
 ## Actualización obligatoria de esta memoria
 
@@ -878,8 +878,8 @@ Pagado, en el listado de inscripciones y el modal del participante, muestra
 los importes originales agrupados por moneda. Ejemplos: Bs 100,00; $us 20,00;
 o Bs 100,00 + $us 20,00 cuando hay pagos mixtos. Sin pagos muestra Bs 0,00.
 Se suman monto para BOB y monto_original para USD mediante agregados SQL,
-sin consultas por fila. Costo, descuento y saldo permanecen en Bs; el saldo
-interno conserva la conversión histórica de cada pago y sus descuentos.
+sin consultas por fila. Desde el 21/11/2026, costo, descuento y saldo se
+calculan en dólares; el saldo también se presenta en bolivianos al tipo vigente.
 El reporte impreso ya separaba ambas monedas y mantiene ese comportamiento.
 No se alteraron pagos, tipos de cambio ni datos operativos.
 Archivos: app/Http/Controllers/InscripcionController.php,
@@ -921,6 +921,9 @@ nullable y asigna Shorin Ryu Shorinkan Bolivia a todas las personas anteriores,
 por confirmación del usuario. Los participantes nuevos pueden escribir su
 organización; no se les asigna una automáticamente. Los envíos antiguos que
 omiten el campo conservan el valor existente; el campo vacío permite borrarlo.
+En la tabla de inscripciones, el valor exacto «Shorin Ryu Shorinkan Bolivia»
+se presenta como «OKINAWA KARATE DO SHORIN RYU SHORINKAN KYOKAI BOLIVIA».
+Es una sustitución de presentación: el valor guardado y otras vistas no cambian.
 El selector País del participante está a la derecha del encabezado Datos de la
 inscripción. Se guarda en personas.pais_id (nullable, FK a paises), se recupera
 al editar o cargar un participante existente y valida que el país exista.
@@ -972,7 +975,8 @@ organización, indica Sin organización registrada. El documento no se duplica.
 Los importes se agrupan
 en una única columna Costo / Pagado / Saldo, en tres líneas etiquetadas.
 Pagado muestra Bs y/o $us según las monedas recibidas, separados por « + »
-cuando hay pagos mixtos. Costo y Saldo permanecen en Bs. La tabla no muestra una columna Evento;
+cuando hay pagos mixtos. Costo se expresa en dólares y saldo en dólares y Bs
+al tipo de cambio vigente. La tabla no muestra una columna Evento;
 el evento se elige en el filtro superior y su nombre aparece a la derecha de
 «Participantes inscritos». Sin un evento válido seleccionado, se muestra sólo
 el título. Los nombres largos pueden pasar a otra línea. Superadmin conserva tarifa, pagado,
@@ -1404,11 +1408,42 @@ repitió la suite PHP por tratarse de un control visual sin cambios de autentica
 
 | Fecha | Cambio | Archivos principales |
 | --- | --- | --- |
+| 2026-11-21 | Saldo calculado en dólares y mostrado también en bolivianos; pagos USD directos y Bs convertidos. Detalles y verificaciones en la sección siguiente. | Inscripcion.php, Pago.php, PagoController.php, InscripcionController.php, vistas de inscripción y pagos, migración de descuento, SaldoEnDolaresTest.php, certificado.md |
+| 2026-11-20 | Nombre completo de la organización en la tabla de inscripciones para la coincidencia exacta. Compilación y limpieza Blade y `git diff --check` correctos. Sin revisión visual ni pruebas automatizadas nuevas por ser un ajuste de presentación; la base MySQL local no estaba disponible. | resources/views/inscripciones/index.blade.php, certificado.md |
 | 2026-11-12 | Registrada la obligación de actualizar esta memoria en cada cambio. Revisión documental; no requiere pruebas de aplicación. | AGENTS.md, certificado.md |
 | 2026-11-12 | Ojo para mostrar/ocultar contraseña en el acceso | auth/login.blade.php, public/js/password-toggle.js, certificado.md |
 | 2026-11-12 | Listado de costos en dólares con tipo de cambio debajo | resources/views/eventos/index.blade.php |
 | 2026-11-12 | Inicio/cierre de sesión, dos roles, gestión de usuarios, seeder y autorización en servidor/interfaz | AuthController, UsuarioController, ProjectAccess, User, routes/web.php, bootstrap/app.php, migración de acceso, UsuariosSeeder, vistas auth/usuarios/layouts/inscripciones y pruebas |
 | 2026-11-12 | URLs versionadas para arte modificado por operador y memoria técnica | personas/vercred.blade.php, personas/ficha.blade.php, certificado.md |
+
+### 21/11/2026: dólar como moneda base de los saldos
+
+La tarifa y los saldos se calculan en dólares. Un pago USD se descuenta por su
+importe original; los Bs se dividen por el tipo de cambio. Se conserva precisión
+intermedia para que Bs 500 de una tarifa de USD 50 a Bs 12/USD dejen USD 8,33
+y Bs 100,00. La lista, el detalle, el historial y el reporte presentan el saldo
+en ambas monedas cuando el evento tiene tipo de cambio. Los importes recibidos
+siguen mostrándose en su moneda original. El saldo en Bs usa el tipo vigente del
+evento. Un pago nuevo en Bs guarda su tipo de cambio; los pagos antiguos en Bs
+sin tipo propio usan el tipo vigente del evento, pues no se guardó uno histórico.
+Los pagos anteriores en USD usan monto_original, independientemente del monto
+en Bs que se guardó al registrarlos. Los descuentos antiguos en Bs se convierten
+con el tipo guardado o, si no existe, el vigente del evento. La nueva columna
+descuento_usd guarda descuentos nuevos con precisión suficiente; la migración
+aditiva 2026_11_21_000001 se aplicó a la base MySQL local configurada.
+No se reescribieron los pagos existentes. Cuando no existe un tipo positivo,
+no se aceptan pagos nuevos en Bs y no se puede calcular un importe histórico en
+Bs que no tenga tipo propio; es necesario configurar el tipo del evento. Las
+tarifas antiguas sin costo USD también requieren tipo para convertir su costo Bs.
+En otras instalaciones hay que aplicar la migración antes de usar esta versión.
+
+Verificaciones de esta tarea: SaldoEnDolaresTest: 4 pruebas y 30 aserciones
+aprobadas; compilación y limpieza Blade y git diff --check correctos. Una ejecución de PagoTest, InscripcionesImprimirTest y
+EventManagementTest dio 18 pruebas aprobadas y 16 fallidas: varias expectativas
+y datos de prueba siguen suponiendo saldos en Bs o pagos en Bs sin tipo. Esa
+ejecución fue anterior al ajuste de compatibilidad de tarifas históricas; queda
+pendiente actualizar y volver a ejecutar esas pruebas. No hubo revisión visual
+interactiva ni despliegue al sitio remoto.
 
 ## Actualización del acceso e identidad (12/11/2026)
 

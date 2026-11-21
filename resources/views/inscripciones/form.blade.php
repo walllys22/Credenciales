@@ -60,8 +60,8 @@
 </form>
 @endsection
 @push('scripts')
-@php($tarifas = $eventos->mapWithKeys(fn ($evento) => [$evento->id => $evento->grados->mapWithKeys(fn ($grado) => [$grado->id => $grado->pivot->costo])]))
-@php($tarifasJefe = $eventos->mapWithKeys(fn ($evento) => [$evento->id => $evento->tipo_cambio ? (string) Brick\Math\BigDecimal::of('100')->multipliedBy($evento->tipo_cambio)->toScale(2, Brick\Math\RoundingMode::HalfUp) : null]))
+@php($tarifas = $eventos->mapWithKeys(fn ($evento) => [$evento->id => $evento->grados->mapWithKeys(fn ($grado) => [$grado->id => $grado->pivot->costo_usd])]))
+@php($tarifasJefe = $eventos->mapWithKeys(fn ($evento) => [$evento->id => '100.00']))
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const tarifas = {{ Illuminate\Support\Js::from($tarifas) }};
@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('observaciones').value = invitado.checked ? 'invitado sin costo' : '';
         const listo = evento.value && grado.value;
         const costo = !listo ? null : invitado.checked ? '0.00' : esJefe ? tarifasJefe[evento.value] : tarifas[evento.value]?.[grado.value];
-        document.getElementById('tariff-message').textContent = duplicado ? 'Este participante ya está inscrito en el evento seleccionado.' : !listo ? 'Selecciona un evento y un grado para consultar el costo.' : invitado.checked ? 'Invitado sin costo. No corresponde realizar ningún pago.' : costo == null ? (esJefe ? 'Configura el tipo de cambio del evento para aplicar la tarifa de $us 100.' : 'Este evento no tiene una tarifa para el grado de la persona.') : esJefe ? 'Tarifa de Jefe de Dojo: $us 100 al tipo de cambio del evento.' : 'Costo según el grado del participante. No representa un pago realizado.';
-        document.getElementById('tariff-amount').textContent = costo == null ? '—' : 'Bs ' + Number(costo).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('tariff-message').textContent = duplicado ? 'Este participante ya está inscrito en el evento seleccionado.' : !listo ? 'Selecciona un evento y un grado para consultar el costo.' : invitado.checked ? 'Invitado sin costo. No corresponde realizar ningún pago.' : costo == null ? 'Este evento no tiene una tarifa para el grado de la persona.' : esJefe ? 'Tarifa de Jefe de Dojo: $us 100.' : 'Costo según el grado del participante. No representa un pago realizado.';
+        document.getElementById('tariff-amount').textContent = costo == null ? '—' : '$us ' + Number(costo).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         guardar.disabled = Boolean(duplicado) || evento.options.length < 2 || grado.options.length < 2;
     }
     evento.addEventListener('change', actualizarTarifa);

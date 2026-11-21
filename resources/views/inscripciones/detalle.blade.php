@@ -43,10 +43,10 @@
                     <dt class="col-sm-4">Jefe de Dojo</dt><dd class="col-sm-8">{{ $inscripcion->jefe_dojo ? 'Sí' : 'No' }}</dd>
                     <dt class="col-sm-4">Invitado sin costo</dt><dd class="col-sm-8">{{ $inscripcion->invitado_sin_costo ? 'Sí' : 'No' }}</dd>
                     <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8">{{ $inscripcion->observaciones ?: 'Sin observaciones' }}</dd>
-                    <dt class="col-sm-4">Costo</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</dd>
+                    <dt class="col-sm-4">Costo</dt><dd class="col-sm-8">$us {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</dd>
                     <dt class="col-sm-4">Pagado</dt><dd class="col-sm-8">@include('inscripciones.importe-pagado')</dd>
-                    <dt class="col-sm-4">Descuento</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->pagos_sum_descuento ?? 0, 2, ',', '.') }}</dd>
-                    <dt class="col-sm-4">Saldo</dt><dd class="col-sm-8">Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</dd>
+                    <dt class="col-sm-4">Descuento</dt><dd class="col-sm-8">$us {{ number_format($inscripcion->descuento_usd, 2, ',', '.') }}</dd>
+                    <dt class="col-sm-4">Saldo</dt><dd class="col-sm-8">$us {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}@if($inscripcion->evento->tipo_cambio) / Bs {{ number_format($inscripcion->saldo_pendiente * $inscripcion->evento->tipo_cambio, 2, ',', '.') }}@endif</dd>
                 </dl>
             </div>
             <div class="modal-footer">

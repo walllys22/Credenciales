@@ -15,7 +15,7 @@ class InscripcionController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', '')); $eventoId = $request->integer('evento_id');
-        $inscripciones = Inscripcion::with(['evento.grados', 'persona.grado', 'persona.pais'])->withSum('pagos', 'monto')->withSum('pagos', 'descuento')->where('evento_id', $eventoId)
+        $inscripciones = Inscripcion::with(['evento.grados', 'persona.grado', 'persona.pais', 'pagos'])->withSum('pagos', 'monto')->withSum('pagos', 'descuento')->where('evento_id', $eventoId)
             ->withSum(['pagos as pagado_bs' => fn ($query) => $query->where('moneda', 'BOB')], 'monto')
             ->withSum(['pagos as pagado_usd' => fn ($query) => $query->where('moneda', 'USD')], 'monto_original')
             ->when($q !== '', fn ($query) => $query->whereHas('persona', fn ($query) => $query->where(function ($query) use ($q) {
@@ -51,7 +51,7 @@ class InscripcionController extends Controller
     public function imprimir(Request $request)
     {
         $eventoId = $request->query('evento_id');
-        $inscripciones = Inscripcion::with(['persona.grado', 'evento.grados'])->when($eventoId, fn ($query) => $query->where('evento_id', $eventoId))->withSum('pagos', 'monto')->withSum('pagos', 'descuento')
+        $inscripciones = Inscripcion::with(['persona.grado', 'evento.grados', 'pagos'])->when($eventoId, fn ($query) => $query->where('evento_id', $eventoId))->withSum('pagos', 'monto')->withSum('pagos', 'descuento')
             ->withSum(['pagos as pagado_bs' => fn ($query) => $query->where('moneda', 'BOB')], 'monto')
             ->withSum(['pagos as pagado_usd' => fn ($query) => $query->where('moneda', 'USD')], 'monto_original')->get()
             ->sortBy(fn ($inscripcion) => mb_strtolower($inscripcion->persona->nombre_completo))->values();
@@ -72,16 +72,16 @@ class InscripcionController extends Controller
         foreach ($pendientes->groupBy('evento_id') as $grupo) {
             $subtotal = BigDecimal::zero();
             foreach ($grupo as $inscripcion) $subtotal = $subtotal->plus($inscripcion->saldo_pendiente);
-            $deudaBs = $deudaBs->plus($subtotal);
+            $deudaUsd = $deudaUsd->plus($subtotal);
             $tipoCambio = $grupo->first()->evento->tipo_cambio;
             if ($tipoCambio && BigDecimal::of($tipoCambio)->isPositive()) {
-                $deudaUsd = $deudaUsd->plus($subtotal->dividedBy($tipoCambio, 12, RoundingMode::HalfUp));
+                $deudaBs = $deudaBs->plus($subtotal->multipliedBy($tipoCambio));
             } else {
                 $conversionCompleta = false;
             }
         }
-        $deudaTotalBs = (string) $deudaBs->toScale(2, RoundingMode::HalfUp);
-        $deudaTotalUsd = $conversionCompleta ? (string) $deudaUsd->toScale(2, RoundingMode::HalfUp) : null;
+        $deudaTotalBs = $conversionCompleta ? (string) $deudaBs->toScale(2, RoundingMode::HalfUp) : null;
+        $deudaTotalUsd = (string) $deudaUsd->toScale(2, RoundingMode::HalfUp);
         $tiposCambioReporte = $eventoId ? Evento::whereKey($eventoId)->get() : $inscripciones->pluck('evento')->unique('id')->values();
 
         return view('inscripciones.imprimir', compact('inscripciones', 'totalPagadoBs', 'totalPagadoUsd', 'participantesConDeuda', 'deudaTotalBs', 'deudaTotalUsd', 'tiposCambioReporte'));
@@ -90,11 +90,11 @@ class InscripcionController extends Controller
     private function calcularTotales(Inscripcion $inscripcion): void
     {
         $tarifa = $inscripcion->tarifa();
-        $pagado = BigDecimal::of((string) ($inscripcion->pagos_sum_monto ?? 0))->toScale(2, RoundingMode::HalfUp);
-        $descuento = BigDecimal::of((string) ($inscripcion->pagos_sum_descuento ?? 0))->toScale(2, RoundingMode::HalfUp);
-        $saldo = BigDecimal::of((string) $tarifa)->minus($pagado)->minus($descuento)->toScale(2);
+        [$pagado, $descuento] = $inscripcion->totalesPagos();
+        $saldo = BigDecimal::of((string) $tarifa)->minus($pagado)->minus($descuento);
         $inscripcion->tarifa_vigente = (string) $tarifa;
         $inscripcion->total_pagado = (string) $pagado;
+        $inscripcion->descuento_usd = (string) $descuento;
         $inscripcion->saldo_pendiente = $saldo->isNegative() ? '0.00' : (string) $saldo;
     }
 

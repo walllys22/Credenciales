@@ -69,15 +69,15 @@
         </div></div>
     </td>
     <td>
-        <div class="mb-1">{{ $inscripcion->persona->organizacion ?: 'Sin organización registrada' }}</div>
+        <div class="mb-1">{{ $inscripcion->persona->organizacion === 'Shorin Ryu Shorinkan Bolivia' ? 'OKINAWA KARATE DO SHORIN RYU SHORINKAN KYOKAI BOLIVIA' : ($inscripcion->persona->organizacion ?: 'Sin organización registrada') }}</div>
         <x-grado-badge :nombre="$inscripcion->persona->grado->nombre"/>
     </td>
     <td>{{ $inscripcion->persona->telefono ?: '—' }}</td>
     @if(auth()->user()->isSuperAdmin())
     <td class="text-nowrap">
-        <div>Costo: <strong>Bs {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</strong></div>
+        <div>Costo: <strong>$us {{ number_format($inscripcion->tarifa_vigente, 2, ',', '.') }}</strong></div>
         <div>Pagado: <strong>@include('inscripciones.importe-pagado')</strong></div>
-        <div>Saldo: <strong>Bs {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}</strong></div>
+        <div>Saldo: <strong>$us {{ number_format($inscripcion->saldo_pendiente, 2, ',', '.') }}@if($inscripcion->evento->tipo_cambio) / Bs {{ number_format($inscripcion->saldo_pendiente * $inscripcion->evento->tipo_cambio, 2, ',', '.') }}@endif</strong></div>
     </td>
     @endif
     <td class="text-end text-nowrap">

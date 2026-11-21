@@ -17,11 +17,11 @@
     <div class="payment-event">{{ $inscripcion->evento->nombre }} · {{ $inscripcion->cargo }}</div>
     <div class="payment-exchange">Tipo de Cambio: <strong>{{ $inscripcion->evento->tipo_cambio ? 'Bs '.number_format($inscripcion->evento->tipo_cambio, 2, ',', '.').' por dólar' : 'Sin configurar' }}</strong></div>
     <div class="payment-totals">
-        <div>Tarifa vigente: <strong>Bs {{ number_format($tarifa, 2, ',', '.') }}</strong></div>
-        <div>Total pagado: <strong>Bs {{ number_format($totalPagado, 2, ',', '.') }}</strong></div>
-        @if($totalDescuento > 0)<div>Descuento por preinscripción: <strong>Bs {{ number_format($totalDescuento, 2, ',', '.') }}</strong></div>@endif
-        <div>Saldo pendiente: <strong>Bs {{ number_format($saldoPendiente, 2, ',', '.') }}</strong></div>
-        @if($saldoAFavor > 0)<div>Saldo a favor: <strong>Bs {{ number_format($saldoAFavor, 2, ',', '.') }}</strong></div>@endif
+        <div>Tarifa vigente: <strong>$us {{ number_format($tarifa, 2, ',', '.') }}</strong></div>
+        <div>Total pagado: <strong>$us {{ number_format($totalPagado, 2, ',', '.') }}</strong></div>
+        @if($totalDescuento > 0)<div>Descuento por preinscripción: <strong>$us {{ number_format($totalDescuento, 2, ',', '.') }}</strong></div>@endif
+        <div>Saldo pendiente: <strong>$us {{ number_format($saldoPendiente, 2, ',', '.') }}@if($inscripcion->evento->tipo_cambio) / Bs {{ number_format($saldoPendiente * $inscripcion->evento->tipo_cambio, 2, ',', '.') }}@endif</strong></div>
+        @if($saldoAFavor > 0)<div>Saldo a favor: <strong>$us {{ number_format($saldoAFavor, 2, ',', '.') }}</strong></div>@endif
     </div>
 </section>
 
@@ -45,6 +45,7 @@
         <label><input type="radio" name="moneda" value="USD" @checked(old('moneda') === 'USD') required> Dólares</label>
       </fieldset>
     </div>
+    @error('moneda')<div class="text-danger mb-3" role="alert">{{ $message }}</div>@enderror
     <div class="payment-fields">
     <div class="payment-fields-row">
         <div class="mb-3">
@@ -74,10 +75,10 @@
 @endif
 
 <section class="panel">
-    <div class="panel-toolbar"><div><h2>Historial de pagos</h2><p>Los pagos en dólares se descuentan al tipo de cambio guardado en cada pago. El saldo restante se expresa en bolivianos.</p></div></div>
+    <div class="panel-toolbar"><div><h2>Historial de pagos</h2><p>Los pagos en bolivianos se convierten a dólares con el tipo de cambio correspondiente.</p></div></div>
     <div class="table-responsive">
         <table class="table align-middle">
-            <thead><tr><th>Fecha</th><th>Monto pagado</th><th>Saldo pendiente (Bs)</th><th>Observación</th><th class="text-end">Acciones</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Monto pagado</th><th>Saldo pendiente</th><th>Observación</th><th class="text-end">Acciones</th></tr></thead>
             <tbody>
                 @forelse($pagos as $pago)
                     <tr>
@@ -85,13 +86,13 @@
                         <td class="text-nowrap">
                             @if($pago->moneda === 'USD')
                                 USD {{ number_format($pago->monto_original, 2, ',', '.') }}
-                                <small class="d-block">Equivale a Bs {{ number_format($pago->monto, 2, ',', '.') }} · TC {{ number_format($pago->tipo_cambio, 2, ',', '.') }}</small>
                             @else
                                 Bs {{ number_format($pago->monto, 2, ',', '.') }}
+                                <small class="d-block">Equivale a $us {{ number_format($pago->importe_usd, 2, ',', '.') }} · TC {{ number_format($pago->tipo_cambio ?: $inscripcion->evento->tipo_cambio, 2, ',', '.') }}</small>
                             @endif
                         </td>
-                        <td class="text-nowrap">Bs {{ number_format($pago->saldo_pendiente, 2, ',', '.') }}</td>
-                        <td>{{ $pago->observacion ?? '—' }}@if($pago->pago_total)<small class="d-block">Pago total por descuento de preinscripción: Bs {{ number_format($pago->descuento, 2, ',', '.') }}</small>@endif</td>
+                        <td class="text-nowrap">$us {{ number_format($pago->saldo_pendiente, 2, ',', '.') }}@if($inscripcion->evento->tipo_cambio)<br>Bs {{ number_format($pago->saldo_pendiente * $inscripcion->evento->tipo_cambio, 2, ',', '.') }}@endif</td>
+                        <td>{{ $pago->observacion ?? '—' }}@if($pago->pago_total)<small class="d-block">Pago total por descuento de preinscripción: $us {{ number_format($pago->descuento_calculado_usd, 2, ',', '.') }}</small>@endif</td>
                         <td class="text-end">
                             @if($pago->id === $pagoEliminableId)
                             <button type="button" class="btn action-button action-delete btn-project" data-bs-toggle="modal" data-bs-target="#eliminar-pago-{{ $pago->id }}" title="Eliminar pago" aria-label="Eliminar pago del {{ $pago->fecha->format('d/m/Y') }} de {{ $inscripcion->persona->nombre_completo }}" data-action-style="delete"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span class="button-label">Eliminar pago</span></button>
@@ -122,12 +123,12 @@
                         <dt>Evento</dt><dd>{{ $inscripcion->evento->nombre }}</dd>
                         <dt>Fecha</dt><dd>{{ $pago->fecha->format('d/m/Y') }}</dd>
                         <dt>Monto pagado</dt><dd>{{ $pago->moneda === 'USD' ? 'USD '.number_format($pago->monto_original, 2, ',', '.') : 'Bs '.number_format($pago->monto, 2, ',', '.') }}</dd>
-                        @if($pago->moneda === 'USD')
-                            <dt>Tipo de cambio</dt><dd>Bs {{ number_format($pago->tipo_cambio, 2, ',', '.') }} por dólar</dd>
-                            <dt>Equivalente</dt><dd>Bs {{ number_format($pago->monto, 2, ',', '.') }}</dd>
+                        @if($pago->moneda === 'BOB')
+                            <dt>Tipo de cambio</dt><dd>Bs {{ number_format($pago->tipo_cambio ?: $inscripcion->evento->tipo_cambio, 2, ',', '.') }} por dólar</dd>
+                            <dt>Equivalente</dt><dd>$us {{ number_format($pago->importe_usd, 2, ',', '.') }}</dd>
                         @endif
                         <dt>Observación</dt><dd>{{ $pago->observacion ?: 'Sin observación' }}</dd>
-                        @if($pago->pago_total)<dt>Descuento</dt><dd>Bs {{ number_format($pago->descuento, 2, ',', '.') }} por preinscripción. Se anulará al eliminar este pago.</dd>@endif
+                        @if($pago->pago_total)<dt>Descuento</dt><dd>$us {{ number_format($pago->descuento_calculado_usd, 2, ',', '.') }} por preinscripción. Se anulará al eliminar este pago.</dd>@endif
                     </dl>
                     <p class="text-danger mb-0">Al eliminarlo se actualizarán el total pagado y el saldo pendiente.</p>
                     <div class="form-check mt-3">

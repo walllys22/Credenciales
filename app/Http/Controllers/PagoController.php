@@ -14,20 +14,21 @@ class PagoController extends Controller
 {
     public function create(Inscripcion $inscripcion)
     {
-        $inscripcion->load(['persona.grado', 'evento.grados']);
+        $inscripcion->load(['persona.grado', 'evento.grados', 'pagos']);
         $tarifa = BigDecimal::of($inscripcion->tarifa())->toScale(2);
-        $totalPagado = BigDecimal::of((string) $inscripcion->pagos()->sum('monto'))->toScale(2, RoundingMode::HalfUp);
-        $totalDescuento = BigDecimal::of((string) $inscripcion->pagos()->sum('descuento'))->toScale(2, RoundingMode::HalfUp);
+        [$totalPagado, $totalDescuento] = $inscripcion->totalesPagos();
         $saldo = $tarifa->minus($totalPagado)->minus($totalDescuento);
-        $pagos = $inscripcion->pagos()->select('pagos.*')
-            ->selectSub(DB::table('pagos as anteriores')->selectRaw('SUM(anteriores.monto + anteriores.descuento)')
-                ->whereColumn('anteriores.inscripcion_id', 'pagos.inscripcion_id')
-                ->where(fn ($query) => $query->whereColumn('anteriores.fecha', '<', 'pagos.fecha')
-                    ->orWhere(fn ($query) => $query->whereColumn('anteriores.fecha', 'pagos.fecha')->whereColumn('anteriores.id', '<=', 'pagos.id'))), 'acumulado')
-            ->orderByDesc('fecha')->orderByDesc('id')->paginate(10);
-        $pagos->getCollection()->each(function ($pago) use ($tarifa) {
-            $restante = $tarifa->minus(BigDecimal::of((string) $pago->acumulado)->toScale(2, RoundingMode::HalfUp));
-            $pago->saldo_pendiente = $restante->isNegative() ? '0.00' : (string) $restante;
+        $acumulado = BigDecimal::zero(); $saldos = [];
+        foreach ($inscripcion->pagos->sortBy([['fecha', 'asc'], ['id', 'asc']]) as $pago) {
+            $acumulado = $acumulado->plus($pago->importeUsd($inscripcion->evento->tipo_cambio))->plus($pago->descuentoUsd($inscripcion->evento->tipo_cambio));
+            $restante = $tarifa->minus($acumulado);
+            $saldos[$pago->id] = $restante->isNegative() ? '0.00' : (string) $restante;
+        }
+        $pagos = $inscripcion->pagos()->orderByDesc('fecha')->orderByDesc('id')->paginate(10);
+        $pagos->getCollection()->each(function ($pago) use ($saldos, $inscripcion) {
+            $pago->saldo_pendiente = $saldos[$pago->id];
+            $pago->importe_usd = (string) $pago->importeUsd($inscripcion->evento->tipo_cambio);
+            $pago->descuento_calculado_usd = (string) $pago->descuentoUsd($inscripcion->evento->tipo_cambio);
         });
 
         return view('inscripciones.pagos', [
@@ -66,17 +67,15 @@ class PagoController extends Controller
 
         $data['moneda'] = $data['moneda'] ?? 'BOB';
         $data['monto_original'] = $data['monto'];
-        if ($data['moneda'] === 'USD') {
+        if ($data['moneda'] === 'BOB') {
             $tipoCambio = $inscripcion->evento->tipo_cambio;
             if (!$tipoCambio || $tipoCambio <= 0) {
-                throw ValidationException::withMessages(['moneda' => 'Configura el tipo de cambio del evento para registrar pagos en dólares.']);
+                throw ValidationException::withMessages(['moneda' => 'Configura el tipo de cambio del evento para registrar pagos en bolivianos.']);
             }
-            $montoBs = BigDecimal::of((string) $data['monto'])->multipliedBy((string) $tipoCambio)->toScale(2, RoundingMode::HalfUp);
-            if ($montoBs->isGreaterThan('9999999999.99') || $montoBs->isLessThan('0.01')) {
-                throw ValidationException::withMessages(['monto' => 'El monto convertido a bolivianos debe estar entre 0,01 y 9.999.999.999,99.']);
+            if (BigDecimal::of((string) $data['monto'])->dividedBy((string) $tipoCambio, 2, RoundingMode::HalfUp)->isLessThan('0.01')) {
+                throw ValidationException::withMessages(['monto' => 'El monto convertido debe ser al menos USD 0,01.']);
             }
             $data['tipo_cambio'] = $tipoCambio;
-            $data['monto'] = (string) $montoBs;
         }
 
         $data['pago_total'] = $request->boolean('pago_total');
@@ -86,13 +85,14 @@ class PagoController extends Controller
                 throw ValidationException::withMessages(['monto' => 'Este participante es invitado sin costo. No corresponde registrar cobros.']);
             }
             $data['descuento'] = '0.00';
+            $data['descuento_usd'] = '0.00';
             if ($data['pago_total']) {
-                $inscripcion->load(['persona', 'evento.grados']);
+                $inscripcion->load(['persona.grado', 'evento.grados', 'pagos']);
                 $tarifa = $inscripcion->tarifa();
-                $pagado = BigDecimal::of((string) $inscripcion->pagos()->sum('monto'))->toScale(2, RoundingMode::HalfUp);
-                $descontado = BigDecimal::of((string) $inscripcion->pagos()->sum('descuento'))->toScale(2, RoundingMode::HalfUp);
-                $diferencia = BigDecimal::of((string) $tarifa)->minus($pagado)->minus($descontado)->minus($data['monto'])->toScale(2);
-                $data['descuento'] = $diferencia->isNegative() ? '0.00' : (string) $diferencia;
+                [$pagado, $descontado] = $inscripcion->totalesPagos();
+                $nuevo = new Pago($data);
+                $diferencia = BigDecimal::of((string) $tarifa)->minus($pagado)->minus($descontado)->minus($nuevo->importeUsd($inscripcion->evento->tipo_cambio));
+                $data['descuento_usd'] = $diferencia->isNegative() ? '0.00' : (string) $diferencia;
             }
             $inscripcion->pagos()->create($data);
         });

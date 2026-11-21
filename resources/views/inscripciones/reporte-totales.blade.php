@@ -5,7 +5,7 @@
                     <table class="report-debt-summary" aria-label="Resumen de deuda">
                         <tbody>
                             <tr><th scope="row">Participantes con deuda</th><td>{{ $participantesConDeuda }}</td></tr>
-                            <tr><th scope="row">Deuda pendiente Bs.-</th><td>{{ number_format($deudaTotalBs, 2, '.', ',') }}</td></tr>
+                            <tr><th scope="row">Deuda pendiente Bs.-</th><td>{{ $deudaTotalBs !== null ? number_format($deudaTotalBs, 2, '.', ',') : 'Sin tipo de cambio' }}</td></tr>
                             <tr><th scope="row">Deuda pendiente $us.-</th><td>{{ $deudaTotalUsd !== null ? number_format($deudaTotalUsd, 2, '.', ',') : 'Sin tipo de cambio' }}</td></tr>
                             <tr><th scope="row">Tipo de cambio</th><td>@forelse($tiposCambioReporte as $eventoCambio)<div>@if($tiposCambioReporte->count() > 1){{ $eventoCambio->nombre }}: @endif{{ $eventoCambio->tipo_cambio ? 'Bs '.number_format($eventoCambio->tipo_cambio, 2, ',', '.').' por 1 $us' : 'Sin registrar' }}</div>@empty Sin registrar @endforelse</td></tr>
                         </tbody>
